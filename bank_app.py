@@ -1,81 +1,122 @@
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import simpledialog, messagebox
+from datetime import datetime
 
 class Bank:
     def __init__(self):
-        self.balance = 0
-        self.transaction_log = []
+        self.load_bank_data()
+        self.load_transaction_log()
+
+    def load_bank_data(self):
+        try:
+            with open('BankData.txt', 'r') as file:
+                self.balance = float(file.readline())
+        except FileNotFoundError:
+            self.balance = 0
+
+    def save_bank_data(self):
+        with open('BankData.txt', 'w') as file:
+            file.write(str(self.balance))
+
+    def load_transaction_log(self):
+        try:
+            with open('TransactionLog.txt', 'r') as file:
+                self.transaction_log = file.readlines()
+        except FileNotFoundError:
+            self.transaction_log = []
+
+    def save_transaction_log(self, transaction):
+        with open('TransactionLog.txt', 'a') as file:
+            file.write(transaction)
 
     def deposit(self, amount):
         try:
-            amount = float(amount)
-            if amount <= 0:
-                raise ValueError
-            self.balance += amount
-            self.transaction_log.append(f"Deposit: +${amount}")
+            self.amount = float(amount)
+            if self.amount <= 0:
+                raise ValueError("Invalid input: Please enter a valid amount.")
+            self.balance += self.amount
+            self.transaction_type = "Deposit"
+            self.save_bank_data()
+            transaction = f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} {self.transaction_type}: ${self.amount}\n"
+            self.save_transaction_log(transaction)
             return True
-        except ValueError:
-            messagebox.showerror("Error", "Invalid input. Please enter a valid amount.")
+        except ValueError as e:
+            messagebox.showerror("Error", str(e))
             return False
 
     def withdraw(self, amount):
         try:
-            amount = float(amount)
-            if amount <= 0 or amount > self.balance:
-                raise ValueError
-            self.balance -= amount
-            self.transaction_log.append(f"Withdrawal: -${amount}")
+            self.amount = float(amount)
+            if self.amount <= 0:
+                raise ValueError("Invalid input: Please enter a valid amount.")
+            if self.amount > self.balance:
+                self.balance -= 8  # Charge R8 for insufficient funds
+                self.transaction_type = "Insufficient Funds Charge"
+                self.save_bank_data()
+                transaction = f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} {self.transaction_type}: $8.00\n"
+                self.save_transaction_log(transaction)
+                messagebox.showinfo("Transaction", "Insufficient funds. R8 charged.")
+            else:
+                self.balance -= self.amount
+                self.transaction_type = "Withdrawal"
+                self.save_bank_data()
+                transaction = f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} {self.transaction_type}: ${self.amount}\n"
+                self.save_transaction_log(transaction)
             return True
-        except ValueError:
-            messagebox.showerror("Error", "Invalid input. Please enter a valid amount.")
+        except ValueError as e:
+            messagebox.showerror("Error", str(e))
             return False
 
     def display_balance(self):
-        messagebox.showinfo("Balance", f"Current Balance: ${self.balance}")
+        return f"Current Balance: ${self.balance}"
 
     def display_transaction_log(self):
-        log = "Transaction Log:\n" + "\n".join(self.transaction_log)
-        messagebox.showinfo("Transaction Log", log)
+        self.load_transaction_log()
+        return "Transaction Log:\n" + "\n".join(self.transaction_log)
 
-def make_deposit(entry_amount):  # Receive entry_amount as argument
-    amount = entry_amount.get()
-    if bank.deposit(amount):
-        bank.display_balance()
+def make_deposit():
+    amount = simpledialog.askfloat("Deposit", "How much would you like to deposit?")
+    if amount is not None:  # Check if user canceled the dialog
+        if bank.deposit(amount):
+            update_balance_display()
 
-def make_withdrawal(entry_amount):  # Receive entry_amount as argument
-    amount = entry_amount.get()
-    if bank.withdraw(amount):
-        bank.display_balance()
+def make_withdrawal():
+    amount = simpledialog.askfloat("Withdrawal", "How much would you like to withdraw?")
+    if amount is not None:  # Check if user canceled the dialog
+        if bank.withdraw(amount):
+            update_balance_display()
 
-def show_transaction_log():
-    bank.display_transaction_log()
+def view_statement():
+    statement_window = tk.Toplevel()
+    statement_window.title("Statement")
+    statement_label = tk.Label(statement_window, text=bank.display_transaction_log())
+    statement_label.pack()
+
+def update_balance_display():
+    balance_label.config(text=bank.display_balance())
 
 def main():
-    global bank  # Declare bank globally for access in functions
+    global bank
 
     bank = Bank()
 
     root = tk.Tk()
     root.title("Banking Application")
 
-    label_amount = tk.Label(root, text="Amount:")
-    label_amount.grid(row=0, column=0)
+    deposit_button = tk.Button(root, text="Deposit", command=make_deposit)
+    deposit_button.pack()
 
-    entry_amount = tk.Entry(root)  # Create the entry widget within main
-    entry_amount.grid(row=0, column=1)
+    withdrawal_button = tk.Button(root, text="Withdrawal", command=make_withdrawal)
+    withdrawal_button.pack()
 
-    button_deposit = tk.Button(root, text="Deposit", command=lambda: make_deposit(entry_amount))
-    button_deposit.grid(row=1, column=0)
+    statement_button = tk.Button(root, text="View Statement", command=view_statement)
+    statement_button.pack()
 
-    button_withdraw = tk.Button(root, text="Withdraw", command=lambda: make_withdrawal(entry_amount))
-    button_withdraw.grid(row=1, column=1)
-
-    button_log = tk.Button(root, text="Transaction Log", command=show_transaction_log)
-    button_log.grid(row=2, column=0, columnspan=2)
+    global balance_label
+    balance_label = tk.Label(root, text=bank.display_balance())
+    balance_label.pack()
 
     root.mainloop()
 
-
 if __name__ == "__main__":
     main()
-
