@@ -34,6 +34,16 @@ class Bank:
             self.amount = float(amount)
             if self.amount <= 0:
                 raise ValueError("Invalid input: Please enter a valid amount.")
+            
+            # Inform the user about the charge
+            confirmation = messagebox.askyesno("Deposit Charge", 
+                                               "A charge of R10 will be applied for this transaction. Do you want to continue?")
+            if not confirmation:
+                return False
+            
+            # Deduct the charge from the deposit
+            self.amount -= 10
+            
             self.balance += self.amount
             self.transaction_type = "Deposit"
             self.save_bank_data()
@@ -56,13 +66,14 @@ class Bank:
                 transaction = f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} {self.transaction_type}: $8.00\n"
                 self.save_transaction_log(transaction)
                 messagebox.showinfo("Transaction", "Insufficient funds. R8 charged.")
+                return False
             else:
                 self.balance -= self.amount
                 self.transaction_type = "Withdrawal"
                 self.save_bank_data()
                 transaction = f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} {self.transaction_type}: ${self.amount}\n"
                 self.save_transaction_log(transaction)
-            return True
+                return True
         except ValueError as e:
             messagebox.showerror("Error", str(e))
             return False
