@@ -3,189 +3,202 @@ from tkinter import messagebox
 import random
 import string
 from cryptography.fernet import Fernet
-import pyotp
-import webbrowser
+
+key = None  # Define key globally
+user_credentials = {}  # Dictionary to store user credentials
+
 
 # Function to generate a random encryption key
 def generate_key():
     return Fernet.generate_key()
+
 
 # Function to encrypt data using a given key
 def encrypt_data(data, key):
     cipher = Fernet(key)
     return cipher.encrypt(data.encode())
 
+
 # Function to decrypt data using a given key
 def decrypt_data(encrypted_data, key):
     cipher = Fernet(key)
     return cipher.decrypt(encrypted_data).decode()
 
+
 # Function to generate a random password
 def generate_password():
     return ''.join(random.choices(string.ascii_letters + string.digits, k=12))
 
+
 # Function to register a new user with encrypted credentials
-def register_user(username, password):
+def register_user(full_name, email, username, password, id_info):
+    global key  # Access the key defined globally
     key = generate_key()
+    encrypted_full_name = encrypt_data(full_name, key)
+    encrypted_email = encrypt_data(email, key)
     encrypted_username = encrypt_data(username, key)
     encrypted_password = encrypt_data(password, key)
-    with open("user_credentials.txt", "ab") as file:
-        file.write(encrypted_username + b":" + encrypted_password + b"\n")
-    return key
+    encrypted_id_info = encrypt_data(id_info, key)
 
-# Function to reset password for a user
-def reset_password(username, new_password):
-    with open("user_credentials.txt", "rb") as file:
-        lines = file.readlines()
-    with open("user_credentials.txt", "wb") as file:
-        for line in lines:
-            encrypted_username, encrypted_password = line.strip().split(b":")
-            decrypted_username = decrypt_data(encrypted_username, key)
-            if username == decrypted_username:
-                encrypted_password = encrypt_data(new_password, key)
-                file.write(encrypted_username + b":" + encrypted_password + b"\n")
-            else:
-                file.write(line)
+    # Store encrypted credentials in dictionary
+    user_credentials[username] = {
+        "full_name": encrypted_full_name,
+        "email": encrypted_email,
+        "password": encrypted_password,
+        "id_info": encrypted_id_info
+    }
 
-# Function to login user with multi-factor authentication
-def login_user(username, password, otp_code, key):
-    with open("user_credentials.txt", "rb") as file:
-        for line in file:
-            encrypted_username, encrypted_password = line.strip().split(b":")
-            decrypted_username = decrypt_data(encrypted_username, key)
-            decrypted_password = decrypt_data(encrypted_password, key)
-            if username == decrypted_username and password == decrypted_password:
-                totp = pyotp.TOTP("base32secret3232")
-                if totp.verify(otp_code):
-                    return True
-    return False
+    try:
+        with open("user_credentials.txt", "ab") as file:
+            file.write(encrypted_full_name + b":" + encrypted_email + b":" +
+                       encrypted_username + b":" + encrypted_password + b":" + encrypted_id_info + b"\n")
+        return key
+    except Exception as e:
+        messagebox.showerror("Error", f"Registration failed: {str(e)}")
+        return None
 
-# Function to toggle password visibility
-def toggle_password_visibility():
-    if password_entry.cget("show") == "":
-        password_entry.config(show="*")
-    else:
-        password_entry.config(show="")
 
 # Function to handle user registration
 def register():
-    main_page_frame.pack_forget()  # Hide the main page frame
-    register_form_frame.pack()     # Show the register form frame
+    register_window = tk.Toplevel(window)
+    register_window.title("Register")
+
+    # Create the register frame
+    register_frame = tk.Frame(register_window)
+
+    # Registration widgets
+    full_name_label = tk.Label(register_frame, text="Full Name:")
+    full_name_label.grid(row=0, column=0, padx=10, pady=5)
+    full_name_entry = tk.Entry(register_frame, width=30)
+    full_name_entry.grid(row=0, column=1, padx=10, pady=5)
+
+    email_label = tk.Label(register_frame, text="Email Address:")
+    email_label.grid(row=1, column=0, padx=10, pady=5)
+    email_entry = tk.Entry(register_frame, width=30)
+    email_entry.grid(row=1, column=1, padx=10, pady=5)
+
+    username_label = tk.Label(register_frame, text="Username:")
+    username_label.grid(row=2, column=0, padx=10, pady=5)
+    username_entry = tk.Entry(register_frame, width=30)
+    username_entry.grid(row=2, column=1, padx=10, pady=5)
+
+    password_label = tk.Label(register_frame, text="Password:")
+    password_label.grid(row=3, column=0, padx=10, pady=5)
+    password_entry = tk.Entry(register_frame, width=30, show="*")
+    password_entry.grid(row=3, column=1, padx=10, pady=5)
+
+    id_info_label = tk.Label(register_frame, text="ID Information:")
+    id_info_label.grid(row=4, column=0, padx=10, pady=5)
+    id_info_entry = tk.Entry(register_frame, width=30)
+    id_info_entry.grid(row=4, column=1, padx=10, pady=5)
+
+    def register_user_wrapper():
+        # Check if all fields are filled
+        if (full_name_entry.get().strip() and email_entry.get().strip() and
+                username_entry.get().strip() and password_entry.get().strip() and
+                id_info_entry.get().strip()):
+            # If all fields are filled, proceed with registration
+            key = register_user(full_name_entry.get().strip(),
+                                email_entry.get().strip(),
+                                username_entry.get().strip(),
+                                password_entry.get().strip(),
+                                id_info_entry.get().strip())
+            if key:
+                # If registration is successful, clear the form fields
+                full_name_entry.delete(0, tk.END)
+                email_entry.delete(0, tk.END)
+                username_entry.delete(0, tk.END)
+                password_entry.delete(0, tk.END)
+                id_info_entry.delete(0, tk.END)
+                # If registration is successful, close the register window
+                register_window.destroy()
+                # Open the login window
+                login()
+        else:
+            # If any field is empty, show an error message
+            messagebox.showerror("Error", "All fields are required.")
+
+    register_button = tk.Button(register_frame, text="Register", command=register_user_wrapper)
+    register_button.grid(row=5, column=0, columnspan=2, padx=10, pady=5)
+
+    # Pack register frame
+    register_frame.pack(padx=20, pady=20)
+
 
 # Function to handle user login
 def login():
-    main_page_frame.pack_forget()  # Hide the main page frame
-    login_form_frame.pack()        # Show the login form frame
+    # Close the main window
+    window.destroy()
 
-# Function to handle password reset
-def forgot_password():
-    login_form_frame.pack_forget()       # Hide the login form frame
-    forgot_password_frame.pack()         # Show the forgot password frame
+    # Create a new Tkinter window for login
+    login_window = tk.Tk()
+    login_window.title("Login")
 
-# Function to go back to the main page
-def go_back():
-    register_form_frame.pack_forget()    # Hide the register form frame
-    login_form_frame.pack_forget()       # Hide the login form frame
-    forgot_password_frame.pack_forget()  # Hide the forgot password frame
-    main_page_frame.pack()               # Show the main page frame
+    # Create the login frame
+    login_frame = tk.Frame(login_window)
 
-# Function to reset the password after verification
-def reset_after_verification():
-    username = verification_username_entry.get()
-    new_password = generate_password()
-    if username:
-        reset_password(username, new_password)
-        messagebox.showinfo("Password Reset", f"Your new password is: {new_password}")
-        go_back()
-    else:
-        messagebox.showerror("Error", "Please enter your username.")
+    # Login widgets
+    username_label = tk.Label(login_frame, text="Username:")
+    username_label.grid(row=0, column=0, padx=10, pady=5)
+    username_entry = tk.Entry(login_frame, width=30)
+    username_entry.grid(row=0, column=1, padx=10, pady=5)
+
+    password_label = tk.Label(login_frame, text="Password:")
+    password_label.grid(row=1, column=0, padx=10, pady=5)
+    password_entry = tk.Entry(login_frame, width=30, show="*")
+    password_entry.grid(row=1, column=1, padx=10, pady=5)
+
+    def authenticate():
+        username = username_entry.get().strip()
+        password = password_entry.get().strip()
+
+        # Check if username exists in user_credentials dictionary
+        if username in user_credentials:
+            # Retrieve encrypted password for the given username
+            encrypted_password = user_credentials[username]["password"]
+            decrypted_password = decrypt_data(encrypted_password, key)
+
+            # Check if entered password matches decrypted password
+            if password == decrypted_password:
+                messagebox.showinfo("Login", "Login successful!")
+            else:
+                messagebox.showerror("Login Failed", "Invalid password.")
+        else:
+            messagebox.showerror("Login Failed", "User not found.")
+
+    login_button = tk.Button(login_frame, text="Login", command=authenticate)
+    login_button.grid(row=2, column=0, columnspan=2, padx=10, pady=5)
+
+    # Pack login frame
+    login_frame.pack(padx=20, pady=20)
+
+    # Run the Tkinter event loop for the login window
+    login_window.mainloop()
+
 
 # Create a Tkinter window
 window = tk.Tk()
 window.title("Secure Banking Application")
 
-# Create the main page frame
-main_page_frame = tk.Frame(window)
+# Set background color to light blue
+window.configure(bg="#ADD8E6")  # Hex color code for light blue
 
-# Create buttons for registration and login on the main page
-register_button = tk.Button(main_page_frame, text="Register", command=register)
-register_button.pack(pady=5)
+# Create the main frame
+main_frame = tk.Frame(window, bg="#ADD8E6")  # Set background color of the frame to match window color
 
-login_button = tk.Button(main_page_frame, text="Login", command=login)
-login_button.pack(pady=5)
+# Money label
+money_label = tk.Label(main_frame, text="Money", font=("Helvetica", 24, "italic"), bg="#ADD8E6")  # Set background color of label
+money_label.grid(row=0, column=0, pady=20)
 
-# Create the register form frame
-register_form_frame = tk.Frame(window)
+# Buttons
+register_button = tk.Button(main_frame, text="Register", width=15, command=register)
+register_button.grid(row=1, column=0, pady=5)
 
-# Create entry fields for register form
-register_username_label = tk.Label(register_form_frame, text="Username:")
-register_username_label.pack(pady=5)
-register_username_entry = tk.Entry(register_form_frame, width=30, font=("Arial", 12), bd=3)
-register_username_entry.pack(pady=5)
+login_button = tk.Button(main_frame, text="Login", width=15, command=login)
+login_button.grid(row=2, column=0, pady=5)
 
-register_password_label = tk.Label(register_form_frame, text="Password:")
-register_password_label.pack(pady=5)
-register_password_entry = tk.Entry(register_form_frame, width=30, font=("Arial", 12), bd=3, show="*")
-register_password_entry.pack(pady=5)
-
-# Create a button to submit the registration form
-register_submit_button = tk.Button(register_form_frame, text="Register", command=register)
-register_submit_button.pack(pady=5)
-
-# Create a button to go back to the main page from the register form
-register_back_button = tk.Button(register_form_frame, text="Back", command=go_back)
-register_back_button.pack(pady=5)
-
-# Create the login form frame
-login_form_frame = tk.Frame(window)
-
-# Create entry fields for login form
-login_username_label = tk.Label(login_form_frame, text="Username:")
-login_username_label.pack(pady=5)
-login_username_entry = tk.Entry(login_form_frame, width=30, font=("Arial", 12), bd=3)
-login_username_entry.pack(pady=5)
-
-login_password_label = tk.Label(login_form_frame, text="Password:")
-login_password_label.pack(pady=5)
-login_password_entry = tk.Entry(login_form_frame, width=30, font=("Arial", 12), bd=3, show="*")
-login_password_entry.pack(pady=5)
-
-# Create a button to submit the login form
-login_submit_button = tk.Button(login_form_frame, text="Login", command=login)
-login_submit_button.pack(pady=5)
-
-# Create a button to go back to the main page from the login form
-login_back_button = tk.Button(login_form_frame, text="Back", command=go_back)
-login_back_button.pack(pady=5)
-
-# Create a button to reset password on the login form
-forgot_password_button = tk.Button(login_form_frame, text="Forgot Password", command=forgot_password)
-forgot_password_button.pack(pady=5)
-
-# Create a Checkbutton to toggle password visibility in the login form
-show_password_var = tk.BooleanVar()
-show_password_checkbox = tk.Checkbutton(login_form_frame, text="Show Password", variable=show_password_var, command=toggle_password_visibility)
-show_password_checkbox.pack(pady=5)
-
-# Create the forgot password form frame
-forgot_password_frame = tk.Frame(window)
-
-# Create entry fields for the forgot password form
-verification_username_label = tk.Label(forgot_password_frame, text="Username:")
-verification_username_label.pack(pady=5)
-verification_username_entry = tk.Entry(forgot_password_frame, width=30, font=("Arial", 12), bd=3)
-verification_username_entry.pack(pady=5)
-
-# Create a button to submit the forgot password form
-verification_submit_button = tk.Button(forgot_password_frame, text="Verify and Reset Password", command=reset_after_verification)
-verification_submit_button.pack(pady=5)
-
-# Create a button to go back to the main page from the forgot password form
-verification_back_button = tk.Button(forgot_password_frame, text="Back", command=go_back)
-verification_back_button.pack(pady=5)
-
-# Pack the main page frame to the window
-main_page_frame.pack()
+# Pack main frame
+main_frame.pack(pady=50)
 
 # Run the Tkinter event loop
 window.mainloop()
