@@ -18,3 +18,6 @@
 2024-05-13 15:51:19 Insufficient Funds Charge: $8.00
 2024-05-13 15:57:51 Deposit: $290.0
 2024-05-13 15:58:19 Insufficient Funds Charge: $8.00
+2024-05-14 10:20:40 Withdrawal: $50.0
+2024-05-14 10:21:54 Withdrawal: $45.0
+2024-05-14 10:22:30 Deposit: $9990.0
