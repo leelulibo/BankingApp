@@ -32,8 +32,8 @@ class Bank:
     def deposit(self, amount):
         try:
             self.amount = float(amount)
-            if self.amount <= 0:
-                raise ValueError("Invalid input: Please enter a valid amount.")
+            if self.amount <= 0 or self.amount % 10 != 0:
+                raise ValueError("Invalid input: Please enter a valid amount in multiples of 10.")
             
             # Inform the user about the charge
             confirmation = messagebox.askyesno("Deposit Charge", 
@@ -62,8 +62,8 @@ class Bank:
     def withdraw(self, amount):
         try:
             self.amount = float(amount)
-            if self.amount <= 0:
-                raise ValueError("Invalid input: Please enter a valid amount.")
+            if self.amount <= 0 or self.amount % 10 != 0:
+                raise ValueError("Invalid input: Please enter a valid amount in multiples of 10.")
             if self.amount > self.balance:
                 # Inform the user about the charge for withdrawing above their balance
                 confirmation = messagebox.askyesno("Withdrawal Charge", 
