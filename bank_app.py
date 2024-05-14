@@ -1,6 +1,9 @@
 import tkinter as tk
 from tkinter import simpledialog, messagebox, scrolledtext
 from datetime import datetime
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 class Bank:
     def __init__(self):
@@ -116,14 +119,53 @@ def view_statement():
     
     statement_window = tk.Toplevel()
     statement_window.title("Statement")
-    statement_window.geometry("400x400")
+    statement_window.geometry("400x450")
     
     statement_text = scrolledtext.ScrolledText(statement_window, width=40, height=10)
     statement_text.insert(tk.END, bank.display_transaction_log())
     statement_text.pack(fill=tk.BOTH, expand=True)
     
+    email_label = tk.Label(statement_window, text="Enter your email address:")
+    email_label.pack()
+    
+    email_entry = tk.Entry(statement_window)
+    email_entry.pack()
+    
+    send_button = tk.Button(statement_window, text="Send Statement", command=lambda: send_statement_email(email_entry.get(), statement_window))
+    send_button.pack()
+    
     back_button = tk.Button(statement_window, text="Back", command=lambda: back_to_main(root, statement_window))
     back_button.pack()
+
+def send_statement_email(email, window):
+    if email.strip() == "":
+        messagebox.showerror("Error", "Please enter a valid email address.")
+        return
+    
+    sender_email = "mduduayanda01@gmail.com"  # Your email
+    receiver_email = email
+    password = "wghb wmhi fwgn qkmu"  # Your email password
+
+    msg = MIMEMultipart()
+    msg['From'] = sender_email
+    msg['To'] = receiver_email
+    msg['Subject'] = "Bank Statement"
+
+    body = bank.display_transaction_log()
+    msg.attach(MIMEText(body, 'plain'))
+
+    text = msg.as_string()
+
+    try:
+        server = smtplib.SMTP('smtp.gmail.com', 587)
+        server.starttls()
+        server.login(sender_email, password)
+        server.sendmail(sender_email, receiver_email, text)
+        server.quit()
+        messagebox.showinfo("Success", "Statement sent successfully!")
+        window.destroy()  # Close the statement window
+    except Exception as e:
+        messagebox.showerror("Error", f"Failed to send email: {str(e)}")
 
 def back_to_main(root, statement_window):
     statement_window.destroy()  # Close the statement window
