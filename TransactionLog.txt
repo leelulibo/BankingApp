@@ -1,0 +1,27 @@
+2024-05-13 15:22:29 Withdrawal: $208.0
+2024-05-13 15:24:40 Withdrawal: $308.0
+2024-05-13 15:27:26 Withdrawal: $208.0
+2024-05-13 15:27:39 Withdrawal: $5008.0
+2024-05-13 15:31:28 Deposit: $200.0
+2024-05-13 15:31:39 Deposit: $5532.0
+2024-05-13 15:31:52 Insufficient Funds Charge: $300.0
+2024-05-13 15:32:16 Insufficient Funds Charge: $200.0
+2024-05-13 15:32:37 Insufficient Funds Charge: $3000.0
+2024-05-13 15:33:09 Deposit: $500.0
+2024-05-13 15:36:07 Deposit: $4000.0
+2024-05-13 15:36:17 Withdrawal: $4476.0
+2024-05-13 15:36:23 Insufficient Funds Charge: $200.0
+2024-05-13 15:39:19 Insufficient Funds Charge: $8.00
+2024-05-13 15:45:09 Insufficient Funds Charge: $8.00
+2024-05-13 15:45:46 Deposit: $100.0
+2024-05-13 15:46:15 Insufficient Funds Charge: $8.00
+2024-05-13 15:51:19 Insufficient Funds Charge: $8.00
+2024-05-13 15:57:51 Deposit: $290.0
+2024-05-13 15:58:19 Insufficient Funds Charge: $8.00
+2024-05-14 09:30:39 Deposit: $190.0
+2024-05-14 09:30:49 Insufficient Funds Charge: $8.00
+2024-05-14 09:47:13 Deposit: $2990.0
+2024-05-14 09:47:41 Withdrawal: $50.0
+2024-05-14 09:48:18 Insufficient Funds Charge: $8.00
+2024-05-14 10:00:47 Deposit: $190.0
+2024-05-14 10:00:47 Deposit Charge: $10.00
