@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import simpledialog, messagebox
+from tkinter import simpledialog, messagebox, scrolledtext
 from datetime import datetime
 
 class Bank:
@@ -49,6 +49,11 @@ class Bank:
             self.save_bank_data()
             transaction = f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} {self.transaction_type}: ${self.amount}\n"
             self.save_transaction_log(transaction)
+            
+            # Save the deposit charge as a separate entry
+            charge_transaction = f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Deposit Charge: $10.00\n"
+            self.save_transaction_log(charge_transaction)
+            
             return True
         except ValueError as e:
             messagebox.showerror("Error", str(e))
@@ -60,7 +65,14 @@ class Bank:
             if self.amount <= 0:
                 raise ValueError("Invalid input: Please enter a valid amount.")
             if self.amount > self.balance:
+                # Inform the user about the charge for withdrawing above their balance
+                confirmation = messagebox.askyesno("Withdrawal Charge", 
+                                                   "A charge of R8 will be applied for withdrawing above your balance. Do you want to continue?")
+                if not confirmation:
+                    return False
+                
                 self.balance -= 8  # Charge R8 for insufficient funds
+                
                 self.transaction_type = "Insufficient Funds Charge"
                 self.save_bank_data()
                 transaction = f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} {self.transaction_type}: $8.00\n"
@@ -83,7 +95,7 @@ class Bank:
 
     def display_transaction_log(self):
         self.load_transaction_log()
-        return "Transaction Log:\n" + "\n".join(self.transaction_log)
+        return "".join(self.transaction_log)
 
 def make_deposit():
     amount = simpledialog.askfloat("Deposit", "How much would you like to deposit?")
@@ -98,16 +110,30 @@ def make_withdrawal():
             update_balance_display()
 
 def view_statement():
+    global root
+    
+    root.withdraw()  # Hide the main window
+    
     statement_window = tk.Toplevel()
     statement_window.title("Statement")
-    statement_label = tk.Label(statement_window, text=bank.display_transaction_log())
-    statement_label.pack()
+    statement_window.geometry("400x400")
+    
+    statement_text = scrolledtext.ScrolledText(statement_window, width=40, height=10)
+    statement_text.insert(tk.END, bank.display_transaction_log())
+    statement_text.pack(fill=tk.BOTH, expand=True)
+    
+    back_button = tk.Button(statement_window, text="Back", command=lambda: back_to_main(root, statement_window))
+    back_button.pack()
+
+def back_to_main(root, statement_window):
+    statement_window.destroy()  # Close the statement window
+    root.deiconify()  # Show the main window
 
 def update_balance_display():
     balance_label.config(text=bank.display_balance())
 
 def main():
-    global bank
+    global bank, root
 
     bank = Bank()
 
