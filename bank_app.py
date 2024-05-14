@@ -131,13 +131,13 @@ def view_statement():
     email_entry = tk.Entry(statement_window)
     email_entry.pack()
     
-    send_button = tk.Button(statement_window, text="Send Statement", command=lambda: send_statement_email(email_entry.get(), statement_window))
+    send_button = tk.Button(statement_window, text="Send Statement", command=lambda: send_statement_email(email_entry.get(), statement_window, email_entry, send_button))
     send_button.pack()
     
     back_button = tk.Button(statement_window, text="Back", command=lambda: back_to_main(root, statement_window))
     back_button.pack()
 
-def send_statement_email(email, window):
+def send_statement_email(email, window, email_entry, send_button):
     if email.strip() == "":
         messagebox.showerror("Error", "Please enter a valid email address.")
         return
@@ -163,7 +163,9 @@ def send_statement_email(email, window):
         server.sendmail(sender_email, receiver_email, text)
         server.quit()
         messagebox.showinfo("Success", "Statement sent successfully!")
-        window.destroy()  # Close the statement window
+        # Disable email entry and send button
+        email_entry.config(state=tk.DISABLED)
+        send_button.config(state=tk.DISABLED)
     except Exception as e:
         messagebox.showerror("Error", f"Failed to send email: {str(e)}")
 
