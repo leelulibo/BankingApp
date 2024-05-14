@@ -27,35 +27,45 @@ def decrypt_data(encrypted_data, key):
 
 # Function to generate a random password
 def generate_password():
-    return ''.join(random.choices(string.ascii_letters + string.digits, k=12))
+    # Define the pool of characters to choose from
+    characters = string.ascii_letters + string.digits + string.punctuation
+    # Generate a random password of length 12
+    return ''.join(random.choices(characters, k=12))
 
 
 # Function to register a new user with encrypted credentials
-def register_user(full_name, email, username, password, id_info):
+def register_user(full_name, surname, account_number, cell_number, email):
     global key  # Access the key defined globally
     key = generate_key()
+    username = full_name.lower().replace(" ", "") + "_" + account_number[-4:]  # Create a username from full name and account number
+    password = generate_password()  # Generate a random password
     encrypted_full_name = encrypt_data(full_name, key)
-    encrypted_email = encrypt_data(email, key)
+    encrypted_surname = encrypt_data(surname, key)
     encrypted_username = encrypt_data(username, key)
     encrypted_password = encrypt_data(password, key)
-    encrypted_id_info = encrypt_data(id_info, key)
+    encrypted_cell_number = encrypt_data(cell_number, key)
+    encrypted_email = encrypt_data(email, key)
 
     # Store encrypted credentials in dictionary
     user_credentials[username] = {
         "full_name": encrypted_full_name,
+        "surname": encrypted_surname,
+        "account_number": account_number,
+        "cell_number": encrypted_cell_number,
         "email": encrypted_email,
-        "password": encrypted_password,
-        "id_info": encrypted_id_info
+        "username": encrypted_username,
+        "password": encrypted_password
     }
 
     try:
         with open("user_credentials.txt", "ab") as file:
-            file.write(encrypted_full_name + b":" + encrypted_email + b":" +
-                       encrypted_username + b":" + encrypted_password + b":" + encrypted_id_info + b"\n")
-        return key
+            file.write(encrypted_full_name + b":" + encrypted_surname + b":" +
+                       account_number.encode() + b":" + encrypted_cell_number + b":" +
+                       encrypted_email + b":" + encrypted_username + b":" + encrypted_password + b"\n")
+        return key, username, password
     except Exception as e:
         messagebox.showerror("Error", f"Registration failed: {str(e)}")
-        return None
+        return None, None, None
 
 
 # Function to handle user registration
@@ -72,48 +82,42 @@ def register():
     full_name_entry = tk.Entry(register_frame, width=30)
     full_name_entry.grid(row=0, column=1, padx=10, pady=5)
 
+    surname_label = tk.Label(register_frame, text="Surname:")
+    surname_label.grid(row=1, column=0, padx=10, pady=5)
+    surname_entry = tk.Entry(register_frame, width=30)
+    surname_entry.grid(row=1, column=1, padx=10, pady=5)
+
+    account_number_label = tk.Label(register_frame, text="Account Number:")
+    account_number_label.grid(row=2, column=0, padx=10, pady=5)
+    account_number_entry = tk.Entry(register_frame, width=30)
+    account_number_entry.grid(row=2, column=1, padx=10, pady=5)
+
+    cell_number_label = tk.Label(register_frame, text="Cell Number:")
+    cell_number_label.grid(row=3, column=0, padx=10, pady=5)
+    cell_number_entry = tk.Entry(register_frame, width=30)
+    cell_number_entry.grid(row=3, column=1, padx=10, pady=5)
+
     email_label = tk.Label(register_frame, text="Email Address:")
-    email_label.grid(row=1, column=0, padx=10, pady=5)
+    email_label.grid(row=4, column=0, padx=10, pady=5)
     email_entry = tk.Entry(register_frame, width=30)
-    email_entry.grid(row=1, column=1, padx=10, pady=5)
-
-    username_label = tk.Label(register_frame, text="Username:")
-    username_label.grid(row=2, column=0, padx=10, pady=5)
-    username_entry = tk.Entry(register_frame, width=30)
-    username_entry.grid(row=2, column=1, padx=10, pady=5)
-
-    password_label = tk.Label(register_frame, text="Password:")
-    password_label.grid(row=3, column=0, padx=10, pady=5)
-    password_entry = tk.Entry(register_frame, width=30, show="*")
-    password_entry.grid(row=3, column=1, padx=10, pady=5)
-
-    id_info_label = tk.Label(register_frame, text="ID Information:")
-    id_info_label.grid(row=4, column=0, padx=10, pady=5)
-    id_info_entry = tk.Entry(register_frame, width=30)
-    id_info_entry.grid(row=4, column=1, padx=10, pady=5)
+    email_entry.grid(row=4, column=1, padx=10, pady=5)
 
     def register_user_wrapper():
         # Check if all fields are filled
-        if (full_name_entry.get().strip() and email_entry.get().strip() and
-                username_entry.get().strip() and password_entry.get().strip() and
-                id_info_entry.get().strip()):
+        if (full_name_entry.get().strip() and surname_entry.get().strip() and
+                account_number_entry.get().strip() and cell_number_entry.get().strip() and
+                email_entry.get().strip()):
             # If all fields are filled, proceed with registration
-            key = register_user(full_name_entry.get().strip(),
-                                email_entry.get().strip(),
-                                username_entry.get().strip(),
-                                password_entry.get().strip(),
-                                id_info_entry.get().strip())
+            key, username, password = register_user(full_name_entry.get().strip(),
+                                                    surname_entry.get().strip(),
+                                                    account_number_entry.get().strip(),
+                                                    cell_number_entry.get().strip(),
+                                                    email_entry.get().strip())
             if key:
-                # If registration is successful, clear the form fields
-                full_name_entry.delete(0, tk.END)
-                email_entry.delete(0, tk.END)
-                username_entry.delete(0, tk.END)
-                password_entry.delete(0, tk.END)
-                id_info_entry.delete(0, tk.END)
+                # If registration is successful, show username and password
+                messagebox.showinfo("Registration Successful", f"Your username is: {username}\nYour password is: {password}")
                 # If registration is successful, close the register window
                 register_window.destroy()
-                # Open the login window
-                login()
         else:
             # If any field is empty, show an error message
             messagebox.showerror("Error", "All fields are required.")
