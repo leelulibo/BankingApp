@@ -4,6 +4,7 @@ import random
 import string
 import smtplib
 import re
+import os
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
@@ -66,11 +67,7 @@ class UserRegistrationApp:
         self.register_submit_btn = tk.Button(self.register_frame, text="Register", command=self.register_user)
         self.register_submit_btn.grid(row=7, columnspan=2)
         
-        # Checkbox for toggling password visibility
-        self.show_password_var = tk.BooleanVar()
-        self.show_password_var.set(False)  # Initially unchecked
-        self.show_password_checkbox = tk.Checkbutton(master, text="Show Password", variable=self.show_password_var, command=self.toggle_password_visibility)
-        self.show_password_checkbox.grid(row=8, column=0, columnspan=2)
+
 
         # Login Form
         self.login_frame = tk.Frame(master)
@@ -88,12 +85,7 @@ class UserRegistrationApp:
 
         self.login_submit_btn = tk.Button(self.login_frame, text="Login", command=self.login_user)
         self.login_submit_btn.grid(row=2, columnspan=2)
-        
-        # Checkbox for toggling password visibility
-        self.show_password_var = tk.BooleanVar()
-        self.show_password_var.set(False)  # Initially unchecked
-        self.show_password_checkbox = tk.Checkbutton(master, text="Show Password", variable=self.show_password_var, command=self.toggle_password_visibility)
-        self.show_password_checkbox.grid(row=8, column=0, columnspan=2)
+
 
         # Initially hide login form
         self.login_frame.grid_remove()
@@ -102,17 +94,7 @@ class UserRegistrationApp:
         password = ''.join(random.choices(string.ascii_letters + string.digits, k=12))
         self.password_entry.delete(0, tk.END)
         self.password_entry.insert(0, password)
-
-    def toggle_password_visibility(self):
-        current_show_state = self.password_entry.cget("show")
-        if current_show_state == "":
-            self.password_entry.config(show="*")
-            self.see_password_btn.config(text="See Password")
-        else:
-            self.password_entry.config(show="")
-            self.see_password_btn.config(text="Hide Password")
     
-
     def generate_account_number(self):
         return ''.join(random.choices(string.digits, k=8))
 
@@ -219,19 +201,27 @@ class UserRegistrationApp:
         if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
             messagebox.showerror("Error", "Invalid email address.")
             return
-        
-         # Toggle password visibility based on checkbox state
-        if self.show_password_var.get():
-            password_entry_value = password  # Show password
-        else:
-            password_entry_value = "*" * len(password)  # Hide password
 
         with open("user_data.txt", "r") as file:
             for line in file:
                 data = line.strip().split(",")
-                if data[3] == email and data[5] == password:
+                if data[4] == email and data[6] == password:  # Adjusted index for email and password
                     messagebox.showinfo("Success", "Login successful!")
-                    # Open bank_app.py page here
+                    
+                    if os.path.exists(f"{data[0]}_TransactionLog.txt") and os.path.exists(f"{data[0]}_BankData.txt"):
+                        # Open existing files
+                        with open(f"{data[0]}_TransactionLog.txt", "r") as trans_file, open(f"{data[0]}_BankData.txt", "r") as bank_file:
+                            # You can do something with these files here
+                            pass
+                    else:
+                        # Create new files for the user
+                        with open(f"{data[0]}_TransactionLog.txt", "w") as trans_file, open(f"{data[0]}_BankData.txt", "w") as bank_file:
+                            # You can initialize these files if needed
+                            pass
+                    
+                    # Open bank_app.py window here
+                    import bank_app  # Importing bank_app.py
+                    bank_app.main()  # Call the main function of bank_app.py to open its window
                     return
         messagebox.showerror("Error", "Invalid email or password.")
 
