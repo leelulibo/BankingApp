@@ -5,24 +5,34 @@ import string
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from PIL import Image, ImageTk
 
 class UserRegistrationApp:
     def __init__(self, master):
         self.master = master
         self.master.title("User Registration")
 
+      
+        # Bank Logo
+        self.bank_logo = Image.open("2ILeFf-LogoMakr.png")  # Replace "bank_logo.png" with the path to your bank logo image
+        #self.bank_logo = self.bank_logo.resize((100, 100), Image.ANTIALIAS)  # Resize the logo as needed
+        self.bank_logo = ImageTk.PhotoImage(self.bank_logo)
+        self.logo_label = tk.Label(master, image=self.bank_logo)
+        self.logo_label.grid(row=0, column=3)
+
+        # Choose an option label
         self.choice_label = tk.Label(master, text="Choose an option:")
-        self.choice_label.grid(row=0, column=0, columnspan=2)
+        self.choice_label.grid(row=1, column=0, columnspan=4)
 
         self.register_btn = tk.Button(master, text="Register", command=self.show_register_form)
-        self.register_btn.grid(row=1, column=0)
+        self.register_btn.grid(row=2, column=0)
 
         self.login_btn = tk.Button(master, text="Login", command=self.show_login_form)
-        self.login_btn.grid(row=1, column=1)
+        self.login_btn.grid(row=2, column=1)
 
         # Registration Form
         self.register_frame = tk.Frame(master)
-        self.register_frame.grid(row=2, column=0, columnspan=2)
+        self.register_frame.grid(row=3, column=0, columnspan=4)
 
         self.firstname_label = tk.Label(self.register_frame, text="First Name:")
         self.firstname_label.grid(row=0, column=0, sticky="e")
@@ -62,7 +72,7 @@ class UserRegistrationApp:
 
         # Login Form
         self.login_frame = tk.Frame(master)
-        self.login_frame.grid(row=2, column=0, columnspan=2)
+        self.login_frame.grid(row=3, column=0, columnspan=4)
 
         self.login_email_label = tk.Label(self.login_frame, text="Email Address:")
         self.login_email_label.grid(row=0, column=0, sticky="e")
@@ -93,7 +103,6 @@ class UserRegistrationApp:
         else:
             self.password_entry.config(show="")
             self.see_password_btn.config(text="Hide Password")
-    
 
     def generate_account_number(self):
         return ''.join(random.choices(string.digits, k=8))
@@ -122,13 +131,11 @@ class UserRegistrationApp:
         self.send_registration_email(firstname, lastname, email, account_number)
 
     def clear_fields(self):
-            self.firstname_entry.delete(0, tk.END)
-            self.lastname_entry.delete(0, tk.END)
-            self.phone_entry.delete(0, tk.END)
-            self.email_entry.delete(0, tk.END)
-            self.password_entry.delete(0, tk.END)
-
-        
+        self.firstname_entry.delete(0, tk.END)
+        self.lastname_entry.delete(0, tk.END)
+        self.phone_entry.delete(0, tk.END)
+        self.email_entry.delete(0, tk.END)
+        self.password_entry.delete(0, tk.END)
 
     def send_registration_email(self, firstname, lastname, email, account_number):
         sender_email = "mduduayanda01@gmail.com"  # Your email
