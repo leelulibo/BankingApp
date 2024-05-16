@@ -202,6 +202,11 @@ class UserRegistrationApp:
     def login_user(self):
         email = self.login_email_entry.get()
         password = self.login_password_entry.get()
+        
+         # Email validation using regular expression
+        if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+            messagebox.showerror("Error", "Invalid email address.")
+            return
 
         with open("user_data.txt", "r") as file:
             for line in file:
