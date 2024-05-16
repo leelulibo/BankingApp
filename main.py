@@ -160,7 +160,7 @@ class UserRegistrationApp:
             file.write(f"{id_number},{firstname},{lastname},{phone},{email},{account_number},{password}\n")
 
         messagebox.showinfo("Success", "User registered successfully.")
-        self.send_registration_email(firstname, lastname, email, account_number)
+        self.send_registration_email(firstname, lastname, email, account_number, password)
 
     def clear_fields(self):
             self.firstname_entry.delete(0, tk.END)
@@ -171,7 +171,7 @@ class UserRegistrationApp:
 
         
 
-    def send_registration_email(self, firstname, lastname, email, account_number):
+    def send_registration_email(self, firstname, lastname, email, account_number, user_password):
         sender_email = "mduduayanda01@gmail.com"  # Your email
         receiver_email = email
         password = "wghb wmhi fwgn qkmu"  # Your email password
@@ -181,7 +181,7 @@ class UserRegistrationApp:
         message["From"] = sender_email
         message["To"] = receiver_email
 
-        text = f"Dear {firstname} {lastname},\n\nThank you for registering with Virtual Vault. Your account has been successfully created with the following details:\n\nFirst Name: {firstname}\nLast Name: {lastname}\nEmail: {email}\nAccount Number: {account_number}\n\nPlease let us know if you have any questions.\n\nBest regards,\nVirtual Vault"
+        text = f"Dear {firstname} {lastname},\n\nThank you for registering with Virtual Vault. Your account has been successfully created with the following details:\n\nFirst Name: {firstname}\nLast Name: {lastname}\nEmail: {email}\nAccount Number: {account_number}\nPassword: {user_password}\n\nPlease let us know if you have any questions.\n\nBest regards,\nVirtual Vault"
 
         part = MIMEText(text, "plain")
         message.attach(part)
