@@ -7,6 +7,7 @@ from email.mime.text import MIMEText
 from fpdf import FPDF
 from email.mime.base import MIMEBase
 from email import encoders
+from main import register_user, login_user
 
 
 class Bank:
@@ -101,13 +102,18 @@ class Bank:
     def display_balance(self):
         return f"Current Balance: ${self.balance}"
 
-    def display_transaction_log(self):
+    def display_transaction_log(self, user_email):
         self.load_transaction_log()
         formatted_log = ""
         for transaction in self.transaction_log:
-            # Append each transaction with the specified currency symbol
-            formatted_log += f"{transaction.strip()} {self.currency}\n"
-        return formatted_log
+         data = transaction.strip().split(":")
+        if len(data) > 1:
+            transaction_email = data[1].strip()
+            if transaction_email == user_email:
+                formatted_log += f"{transaction.strip()} {self.currency}\n"
+            return formatted_log
+
+   
     
     
 def make_deposit():
@@ -204,7 +210,7 @@ def back_to_main(root, statement_window):
 def update_balance_display():
     balance_label.config(text=bank.display_balance())
 
-def main():
+def bank_main():
     global bank, root
 
     bank = Bank(currency='R')
@@ -228,4 +234,4 @@ def main():
     root.mainloop()
 
 if __name__ == "__main__":
-    main()
+    bank_main()

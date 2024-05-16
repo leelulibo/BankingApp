@@ -5,6 +5,7 @@ import string
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from bank_app import bank_main
 
 class UserRegistrationApp:
     def __init__(self, master):
@@ -168,6 +169,8 @@ class UserRegistrationApp:
                 if data[3] == email and data[5] == password:
                     messagebox.showinfo("Success", "Login successful!")
                     # Open bank_app.py page here
+                    self.master.destroy()
+                    bank_main()
                     return
         messagebox.showerror("Error", "Invalid email or password.")
 
