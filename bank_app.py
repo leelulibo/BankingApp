@@ -11,10 +11,27 @@ import PyPDF2
 
 
 class Bank:
-    def __init__(self, currency="$"):  # Add a currency parameter with a default value
+    def __init__(self, currency="$", account_holder_name="", account_number="", account_holder_address=""):  
         self.currency = currency
+        self.account_holder_name = account_holder_name
+        self.account_number = account_number
+        self.account_address = account_holder_address
         self.load_bank_data()
         self.load_transaction_log()
+
+    def set_account_info(self, name, number, address):
+        self.account_holder_name = name
+        self.account_number = number
+        self.account_holder_address = address
+
+    def get_account_holder_name(self):
+        return self.account_holder_name
+
+    def get_account_number(self):
+        return self.account_number
+    
+    def get_account_holder_address(self):
+        return self.account_holder_address
 
     def load_bank_data(self):
         try:
@@ -22,6 +39,15 @@ class Bank:
                 self.balance = float(file.readline())
         except FileNotFoundError:
             self.balance = 0
+
+    def load_account_info(self):
+        try:
+            with open('AccountInfo.txt', 'r') as file:
+                data = file.readline().strip().split(',')
+                self.account_holder_name = data[0]
+                self.account_number = data[1]
+        except FileNotFoundError:
+            pass  # Handle missing file
 
     def save_bank_data(self):
         with open('BankData.txt', 'w') as file:
@@ -44,13 +70,11 @@ class Bank:
             if self.amount <= 0 or self.amount % 10 != 0:
                 raise ValueError("Invalid input: Please enter a valid amount in multiples of 10.")
             
-            # Inform the user about the charge
             confirmation = messagebox.askyesno("Deposit Charge", 
                                                "A charge of R10 will be applied for this transaction. Do you want to continue?")
             if not confirmation:
                 return False
             
-            # Deduct the charge from the deposit
             self.amount -= 10
             
             self.balance += self.amount
@@ -59,7 +83,6 @@ class Bank:
             transaction = f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} {self.transaction_type}: ${self.amount}\n"
             self.save_transaction_log(transaction)
             
-            # Save the deposit charge as a separate entry
             charge_transaction = f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Deposit Charge: $10.00\n"
             self.save_transaction_log(charge_transaction)
             
@@ -74,13 +97,12 @@ class Bank:
             if self.amount <= 0 or self.amount % 10 != 0:
                 raise ValueError("Invalid input: Please enter a valid amount in multiples of 10.")
             if self.amount > self.balance:
-                # Inform the user about the charge for withdrawing above their balance
                 confirmation = messagebox.askyesno("Withdrawal Charge", 
                                                    "A charge of R8 will be applied for withdrawing above your balance. Do you want to continue?")
                 if not confirmation:
                     return False
                 
-                self.balance -= 8  # Charge R8 for insufficient funds
+                self.balance -= 8  
                 
                 self.transaction_type = "Insufficient Funds Charge"
                 self.save_bank_data()
@@ -106,24 +128,25 @@ class Bank:
         self.load_transaction_log()
         formatted_log = ""
         for transaction in self.transaction_log:
-            # Append each transaction with the specified currency symbol
             formatted_log += f"{transaction.strip()} {self.currency}\n"
         return formatted_log
 
 
+
 def make_deposit():
     amount = simpledialog.askfloat("Deposit", "How much would you like to deposit?")
-    if amount is not None:  # Check if user canceled the dialog
+    if amount is not None:  
         if bank.deposit(amount):
             update_balance_display()
 
 
 def make_withdrawal():
     amount = simpledialog.askfloat("Withdrawal", "How much would you like to withdraw?")
-    if amount is not None:  # Check if user canceled the dialog
+    if amount is not None:  
         if bank.withdraw(amount):
             update_balance_display()
 
+def send_statement_email(email, window, email_entry, send_button):
 
 def view_statement():
     global root
@@ -182,20 +205,36 @@ def send_statement_email(email, window):
     if email.strip() == "":
         messagebox.showerror("Error", "Please enter a valid email address.")
         return
+    
+    sender_email = "mduduayanda01@gmail.com"  
 
     sender_email = "mduduayanda01@gmail.com"  # Your email
     receiver_email = email
+    password = "wghb wmhi fwgn qkmu"  
+
+    msg = MIMEMultipart()
+    msg['From'] = sender_email
+    msg['To'] = receiver_email
+    msg['Subject'] = "Bank Statement"
     password = "wghb wmhi fwgn qkmu"  # Your email password
 
-    # Convert the transaction log text to a PDF file
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("Arial", size=12)
+    
+    account_holder_name = bank.get_account_holder_name()
+    account_number = bank.get_account_number()
+    pdf.cell(200, 10, f"Account Holder: {account_holder_name}", ln=True)
+    pdf.cell(200, 10, f"Account Number: {account_number}", ln=True)
+    pdf.cell(200, 10, "", ln=True)  
+    
     body = bank.display_transaction_log()
     pdf.multi_cell(0, 10, body)
+    
     pdf_file_name = "bank_statement.pdf"
     pdf.output(pdf_file_name)
 
+    with open(pdf_file_name, "rb") as attachment:
     # Encrypt the PDF file
     encrypted_pdf_file = encrypt_pdf(pdf_file_name)
 
@@ -224,7 +263,8 @@ def send_statement_email(email, window):
         server.sendmail(sender_email, receiver_email, text)
         server.quit()
         messagebox.showinfo("Success", "Statement sent successfully!")
-        window.destroy()  # Close the statement window
+        email_entry.config(state=tk.DISABLED)
+        send_button.config(state=tk.DISABLED)
     except Exception as e:
         messagebox.showerror("Error", f"Failed to send email: {str(e)}")
 
@@ -237,14 +277,49 @@ def back_to_main(root, statement_window):
 def update_balance_display():
     balance_label.config(text=bank.display_balance())
 
+def view_statement():
+    global root
+    
+    root.withdraw()  # Hide the main window
+    
+    statement_window = tk.Toplevel()
+    statement_window.title("Statement")
+    statement_window.geometry("400x450")
+    
+    statement_text = scrolledtext.ScrolledText(statement_window, width=40, height=10)
+    statement_text.insert(tk.END, bank.display_transaction_log())
+    statement_text.pack(fill=tk.BOTH, expand=True)
+    
+    email_label = tk.Label(statement_window, text="Enter your email address:")
+    email_label.pack()
+    
+    email_entry = tk.Entry(statement_window)
+    email_entry.pack()
+    
+    send_button = tk.Button(statement_window, text="Send Statement", command=lambda: send_statement_email(email_entry.get(), statement_window, email_entry, send_button))
+    send_button.pack()
+    
+    back_button = tk.Button(statement_window, text="Back", command=lambda: back_to_main(root, statement_window))
+    back_button.pack()
+
+def back_to_main(root, statement_window):
+    statement_window.destroy()  
+    root.deiconify()  
+
 
 def main():
     global bank, root
 
     bank = Bank(currency='R')
+    bank.load_account_info()  # Load account holder's info from file
 
     root = tk.Tk()
     root.title("Banking Application")
+
+    # Load logo image
+    logo_image = tk.PhotoImage(file="2ILeFf-LogoMakr.png")
+    logo_label = tk.Label(root, image=logo_image)
+    logo_label.pack()
 
     deposit_button = tk.Button(root, text="Deposit", command=make_deposit)
     deposit_button.pack()
