@@ -66,6 +66,12 @@ class UserRegistrationApp:
 
         self.register_submit_btn = tk.Button(self.register_frame, text="Register", command=self.register_user)
         self.register_submit_btn.grid(row=7, columnspan=2)
+        
+        # Checkbox for toggling password visibility
+        self.show_password_var = tk.BooleanVar()
+        self.show_password_var.set(False)  # Initially unchecked
+        self.show_password_checkbox = tk.Checkbutton(master, text="Show Password", variable=self.show_password_var, command=self.toggle_password_visibility)
+        self.show_password_checkbox.grid(row=8, column=0, columnspan=2)
 
         # Login Form
         self.login_frame = tk.Frame(master)
@@ -83,6 +89,12 @@ class UserRegistrationApp:
 
         self.login_submit_btn = tk.Button(self.login_frame, text="Login", command=self.login_user)
         self.login_submit_btn.grid(row=2, columnspan=2)
+        
+        # Checkbox for toggling password visibility
+        self.show_password_var = tk.BooleanVar()
+        self.show_password_var.set(False)  # Initially unchecked
+        self.show_password_checkbox = tk.Checkbutton(master, text="Show Password", variable=self.show_password_var, command=self.toggle_password_visibility)
+        self.show_password_checkbox.grid(row=8, column=0, columnspan=2)
 
         # Initially hide login form
         self.login_frame.grid_remove()
@@ -203,6 +215,17 @@ class UserRegistrationApp:
     def login_user(self):
         email = self.login_email_entry.get()
         password = self.login_password_entry.get()
+        
+         # Email validation using regular expression
+        if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+            messagebox.showerror("Error", "Invalid email address.")
+            return
+        
+         # Toggle password visibility based on checkbox state
+        if self.show_password_var.get():
+            password_entry_value = password  # Show password
+        else:
+            password_entry_value = "*" * len(password)  # Hide password
 
         with open("user_data.txt", "r") as file:
             for line in file:
