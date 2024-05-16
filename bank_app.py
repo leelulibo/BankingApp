@@ -7,7 +7,7 @@ from email.mime.text import MIMEText
 from fpdf import FPDF
 from email.mime.base import MIMEBase
 from email import encoders
-from main import register_user, login_user
+
 
 
 class Bank:
