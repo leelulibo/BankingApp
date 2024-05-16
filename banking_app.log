@@ -1,0 +1,2 @@
+ERROR:root:Failed to send email: (535, b'5.7.8 Username and Password not accepted. For more information, go to\n5.7.8  https://support.google.com/mail/?p=BadCredentials ffacd0b85a97d-3502bbbc35asm18372655f8f.109 - gsmtp')
+ERROR:root:Failed to send email: (535, b'5.7.8 Username and Password not accepted. For more information, go to\n5.7.8  https://support.google.com/mail/?p=BadCredentials ffacd0b85a97d-3502bbc5654sm18614203f8f.115 - gsmtp')

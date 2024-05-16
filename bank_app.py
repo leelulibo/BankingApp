@@ -4,9 +4,10 @@ from datetime import datetime
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from fpdf import FPDF
 from email.mime.base import MIMEBase
 from email import encoders
+from fpdf import FPDF
+import PyPDF2
 
 
 class Bank:
@@ -108,13 +109,14 @@ class Bank:
             # Append each transaction with the specified currency symbol
             formatted_log += f"{transaction.strip()} {self.currency}\n"
         return formatted_log
-    
-    
+
+
 def make_deposit():
     amount = simpledialog.askfloat("Deposit", "How much would you like to deposit?")
     if amount is not None:  # Check if user canceled the dialog
         if bank.deposit(amount):
             update_balance_display()
+
 
 def make_withdrawal():
     amount = simpledialog.askfloat("Withdrawal", "How much would you like to withdraw?")
@@ -122,44 +124,68 @@ def make_withdrawal():
         if bank.withdraw(amount):
             update_balance_display()
 
+
 def view_statement():
     global root
-    
+
     root.withdraw()  # Hide the main window
-    
+
     statement_window = tk.Toplevel()
     statement_window.title("Statement")
     statement_window.geometry("400x450")
-    
+
     statement_text = scrolledtext.ScrolledText(statement_window, width=40, height=10)
     statement_text.insert(tk.END, bank.display_transaction_log())
     statement_text.pack(fill=tk.BOTH, expand=True)
-    
+
     email_label = tk.Label(statement_window, text="Enter your email address:")
     email_label.pack()
-    
+
     email_entry = tk.Entry(statement_window)
     email_entry.pack()
-    
+
     send_button = tk.Button(statement_window, text="Send Statement", command=lambda: send_statement_email(email_entry.get(), statement_window))
     send_button.pack()
-    
+
     back_button = tk.Button(statement_window, text="Back", command=lambda: back_to_main(root, statement_window))
     back_button.pack()
+
+
+def encrypt_pdf(pdf_file_name):
+    output_pdf_file = "encrypted_bank_statement.pdf"
+    pdf_writer = PyPDF2.PdfWriter()
+    with open(pdf_file_name, "rb") as pdf_file:
+        pdf_reader = PyPDF2.PdfReader(pdf_file)
+        for page_num in range(len(pdf_reader.pages)):
+            pdf_writer.add_page(pdf_reader.pages[page_num])
+        pdf_writer.encrypt("12345")  # Encrypt with password '12345'
+        with open(output_pdf_file, "wb") as encrypted_pdf_file:
+            pdf_writer.write(encrypted_pdf_file)
+    return output_pdf_file
+
+
+def decrypt_pdf(encrypted_pdf_file):
+    decrypted_pdf_file = "decrypted_bank_statement.pdf"
+    with open(encrypted_pdf_file, "rb") as pdf_file:
+        pdf_reader = PyPDF2.PdfReader(pdf_file)
+        if pdf_reader.is_encrypted:
+            pdf_reader.decrypt("12345")  # Decrypt with password '12345'
+        pdf_writer = PyPDF2.PdfWriter()
+        for page_num in range(len(pdf_reader.pages)):
+            pdf_writer.add_page(pdf_reader.pages[page_num])
+        with open(decrypted_pdf_file, "wb") as decrypted_pdf:
+            pdf_writer.write(decrypted_pdf)
+    return decrypted_pdf_file
+
 
 def send_statement_email(email, window):
     if email.strip() == "":
         messagebox.showerror("Error", "Please enter a valid email address.")
         return
-    
+
     sender_email = "mduduayanda01@gmail.com"  # Your email
     receiver_email = email
     password = "wghb wmhi fwgn qkmu"  # Your email password
-
-    msg = MIMEMultipart()
-    msg['From'] = sender_email
-    msg['To'] = receiver_email
-    msg['Subject'] = "Bank Statement"
 
     # Convert the transaction log text to a PDF file
     pdf = FPDF()
@@ -170,19 +196,25 @@ def send_statement_email(email, window):
     pdf_file_name = "bank_statement.pdf"
     pdf.output(pdf_file_name)
 
-    # Attach the PDF file to the email
-    with open(pdf_file_name, "rb") as attachment:
+    # Encrypt the PDF file
+    encrypted_pdf_file = encrypt_pdf(pdf_file_name)
+
+    # Attach the encrypted PDF file to the email
+    with open(encrypted_pdf_file, "rb") as attachment:
         part = MIMEBase("application", "octet-stream")
         part.set_payload(attachment.read())
 
     encoders.encode_base64(part)
     part.add_header(
         "Content-Disposition",
-        f"attachment; filename= {pdf_file_name}",
+        f"attachment; filename= {encrypted_pdf_file}",
     )
 
+    msg = MIMEMultipart()
+    msg['From'] = sender_email
+    msg['To'] = receiver_email
+    msg['Subject'] = "Bank Statement"
     msg.attach(part)
-
     text = msg.as_string()
 
     try:
@@ -196,13 +228,15 @@ def send_statement_email(email, window):
     except Exception as e:
         messagebox.showerror("Error", f"Failed to send email: {str(e)}")
 
-        
+
 def back_to_main(root, statement_window):
     statement_window.destroy()  # Close the statement window
     root.deiconify()  # Show the main window
 
+
 def update_balance_display():
     balance_label.config(text=bank.display_balance())
+
 
 def main():
     global bank, root
@@ -226,6 +260,7 @@ def main():
     balance_label.pack()
 
     root.mainloop()
+
 
 if __name__ == "__main__":
     main()
