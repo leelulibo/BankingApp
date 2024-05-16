@@ -2,203 +2,179 @@ import tkinter as tk
 from tkinter import messagebox
 import random
 import string
-from cryptography.fernet import Fernet
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
-key = None  # Define key globally
-user_credentials = {}  # Dictionary to store user credentials
+class UserRegistrationApp:
+    def __init__(self, master):
+        self.master = master
+        self.master.title("User Registration")
 
+        self.choice_label = tk.Label(master, text="Choose an option:")
+        self.choice_label.grid(row=0, column=0, columnspan=2)
 
-# Function to generate a random encryption key
-def generate_key():
-    return Fernet.generate_key()
+        self.register_btn = tk.Button(master, text="Register", command=self.show_register_form)
+        self.register_btn.grid(row=1, column=0)
 
+        self.login_btn = tk.Button(master, text="Login", command=self.show_login_form)
+        self.login_btn.grid(row=1, column=1)
 
-# Function to encrypt data using a given key
-def encrypt_data(data, key):
-    cipher = Fernet(key)
-    return cipher.encrypt(data.encode())
+        # Registration Form
+        self.register_frame = tk.Frame(master)
+        self.register_frame.grid(row=2, column=0, columnspan=2)
 
+        self.firstname_label = tk.Label(self.register_frame, text="First Name:")
+        self.firstname_label.grid(row=0, column=0, sticky="e")
+        self.firstname_entry = tk.Entry(self.register_frame)
+        self.firstname_entry.grid(row=0, column=1)
 
-# Function to decrypt data using a given key
-def decrypt_data(encrypted_data, key):
-    cipher = Fernet(key)
-    return cipher.decrypt(encrypted_data).decode()
+        self.lastname_label = tk.Label(self.register_frame, text="Last Name:")
+        self.lastname_label.grid(row=1, column=0, sticky="e")
+        self.lastname_entry = tk.Entry(self.register_frame)
+        self.lastname_entry.grid(row=1, column=1)
 
+        self.phone_label = tk.Label(self.register_frame, text="Phone Number:")
+        self.phone_label.grid(row=2, column=0, sticky="e")
+        self.phone_entry = tk.Entry(self.register_frame)
+        self.phone_entry.grid(row=2, column=1)
 
-# Function to generate a random password
-def generate_password():
-    return ''.join(random.choices(string.ascii_letters + string.digits, k=12))
+        self.email_label = tk.Label(self.register_frame, text="Email Address:")
+        self.email_label.grid(row=3, column=0, sticky="e")
+        self.email_entry = tk.Entry(self.register_frame)
+        self.email_entry.grid(row=3, column=1)
 
+        self.account_label = tk.Label(self.register_frame, text="Account Number:")
+        self.account_label.grid(row=4, column=0, sticky="e")
+        self.account_entry = tk.Entry(self.register_frame, state="readonly")
+        self.account_entry.grid(row=4, column=1)
 
-# Function to register a new user with encrypted credentials
-def register_user(full_name, email, username, password, id_info):
-    global key  # Access the key defined globally
-    key = generate_key()
-    encrypted_full_name = encrypt_data(full_name, key)
-    encrypted_email = encrypt_data(email, key)
-    encrypted_username = encrypt_data(username, key)
-    encrypted_password = encrypt_data(password, key)
-    encrypted_id_info = encrypt_data(id_info, key)
+        self.password_label = tk.Label(self.register_frame, text="Password:")
+        self.password_label.grid(row=5, column=0, sticky="e")
+        self.password_entry = tk.Entry(self.register_frame, show="*")
+        self.password_entry.grid(row=5, column=1)
 
-    # Store encrypted credentials in dictionary
-    user_credentials[username] = {
-        "full_name": encrypted_full_name,
-        "email": encrypted_email,
-        "password": encrypted_password,
-        "id_info": encrypted_id_info
-    }
+        self.generate_password_btn = tk.Button(self.register_frame, text="Generate Password", command=self.generate_password)
+        self.generate_password_btn.grid(row=5, column=2)
 
-    try:
-        with open("user_credentials.txt", "ab") as file:
-            file.write(encrypted_full_name + b":" + encrypted_email + b":" +
-                       encrypted_username + b":" + encrypted_password + b":" + encrypted_id_info + b"\n")
-        return key
-    except Exception as e:
-        messagebox.showerror("Error", f"Registration failed: {str(e)}")
-        return None
+        self.register_submit_btn = tk.Button(self.register_frame, text="Register", command=self.register_user)
+        self.register_submit_btn.grid(row=6, columnspan=2)
 
+        # Login Form
+        self.login_frame = tk.Frame(master)
+        self.login_frame.grid(row=2, column=0, columnspan=2)
 
-# Function to handle user registration
-def register():
-    register_window = tk.Toplevel(window)
-    register_window.title("Register")
+        self.login_email_label = tk.Label(self.login_frame, text="Email Address:")
+        self.login_email_label.grid(row=0, column=0, sticky="e")
+        self.login_email_entry = tk.Entry(self.login_frame)
+        self.login_email_entry.grid(row=0, column=1)
 
-    # Create the register frame
-    register_frame = tk.Frame(register_window)
+        self.login_password_label = tk.Label(self.login_frame, text="Password:")
+        self.login_password_label.grid(row=1, column=0, sticky="e")
+        self.login_password_entry = tk.Entry(self.login_frame, show="*")
+        self.login_password_entry.grid(row=1, column=1)
 
-    # Registration widgets
-    full_name_label = tk.Label(register_frame, text="Full Name:")
-    full_name_label.grid(row=0, column=0, padx=10, pady=5)
-    full_name_entry = tk.Entry(register_frame, width=30)
-    full_name_entry.grid(row=0, column=1, padx=10, pady=5)
+        self.login_submit_btn = tk.Button(self.login_frame, text="Login", command=self.login_user)
+        self.login_submit_btn.grid(row=2, columnspan=2)
 
-    email_label = tk.Label(register_frame, text="Email Address:")
-    email_label.grid(row=1, column=0, padx=10, pady=5)
-    email_entry = tk.Entry(register_frame, width=30)
-    email_entry.grid(row=1, column=1, padx=10, pady=5)
+        # Initially hide login form
+        self.login_frame.grid_remove()
 
-    username_label = tk.Label(register_frame, text="Username:")
-    username_label.grid(row=2, column=0, padx=10, pady=5)
-    username_entry = tk.Entry(register_frame, width=30)
-    username_entry.grid(row=2, column=1, padx=10, pady=5)
+    def generate_password(self):
+        password = ''.join(random.choices(string.ascii_letters + string.digits, k=12))
+        self.password_entry.delete(0, tk.END)
+        self.password_entry.insert(0, password)
 
-    password_label = tk.Label(register_frame, text="Password:")
-    password_label.grid(row=3, column=0, padx=10, pady=5)
-    password_entry = tk.Entry(register_frame, width=30, show="*")
-    password_entry.grid(row=3, column=1, padx=10, pady=5)
-
-    id_info_label = tk.Label(register_frame, text="ID Information:")
-    id_info_label.grid(row=4, column=0, padx=10, pady=5)
-    id_info_entry = tk.Entry(register_frame, width=30)
-    id_info_entry.grid(row=4, column=1, padx=10, pady=5)
-
-    def register_user_wrapper():
-        # Check if all fields are filled
-        if (full_name_entry.get().strip() and email_entry.get().strip() and
-                username_entry.get().strip() and password_entry.get().strip() and
-                id_info_entry.get().strip()):
-            # If all fields are filled, proceed with registration
-            key = register_user(full_name_entry.get().strip(),
-                                email_entry.get().strip(),
-                                username_entry.get().strip(),
-                                password_entry.get().strip(),
-                                id_info_entry.get().strip())
-            if key:
-                # If registration is successful, clear the form fields
-                full_name_entry.delete(0, tk.END)
-                email_entry.delete(0, tk.END)
-                username_entry.delete(0, tk.END)
-                password_entry.delete(0, tk.END)
-                id_info_entry.delete(0, tk.END)
-                # If registration is successful, close the register window
-                register_window.destroy()
-                # Open the login window
-                login()
+    def toggle_password_visibility(self):
+        current_show_state = self.password_entry.cget("show")
+        if current_show_state == "":
+            self.password_entry.config(show="*")
+            self.see_password_btn.config(text="See Password")
         else:
-            # If any field is empty, show an error message
-            messagebox.showerror("Error", "All fields are required.")
+            self.password_entry.config(show="")
+            self.see_password_btn.config(text="Hide Password")
+    
 
-    register_button = tk.Button(register_frame, text="Register", command=register_user_wrapper)
-    register_button.grid(row=5, column=0, columnspan=2, padx=10, pady=5)
+    def generate_account_number(self):
+        return ''.join(random.choices(string.digits, k=8))
 
-    # Pack register frame
-    register_frame.pack(padx=20, pady=20)
+    def register_user(self):
+        firstname = self.firstname_entry.get()
+        lastname = self.lastname_entry.get()
+        phone = self.phone_entry.get()
+        email = self.email_entry.get()
+        password = self.password_entry.get()
 
+        if not firstname or not lastname or not phone or not email or not password:
+            messagebox.showerror("Error", "Please fill in all fields.")
+            return
 
-# Function to handle user login
-def login():
-    # Close the main window
-    window.destroy()
+        account_number = self.generate_account_number()
+        self.account_entry.config(state="normal")
+        self.account_entry.delete(0, tk.END)
+        self.account_entry.insert(0, account_number)
+        self.account_entry.config(state="readonly")
 
-    # Create a new Tkinter window for login
-    login_window = tk.Tk()
-    login_window.title("Login")
+        with open("user_data.txt", "a") as file:
+            file.write(f"{firstname},{lastname},{phone},{email},{account_number},{password}\n")
 
-    # Create the login frame
-    login_frame = tk.Frame(login_window)
+        messagebox.showinfo("Success", "User registered successfully.")
+        self.send_registration_email(firstname, lastname, email, account_number)
 
-    # Login widgets
-    username_label = tk.Label(login_frame, text="Username:")
-    username_label.grid(row=0, column=0, padx=10, pady=5)
-    username_entry = tk.Entry(login_frame, width=30)
-    username_entry.grid(row=0, column=1, padx=10, pady=5)
+    def clear_fields(self):
+            self.firstname_entry.delete(0, tk.END)
+            self.lastname_entry.delete(0, tk.END)
+            self.phone_entry.delete(0, tk.END)
+            self.email_entry.delete(0, tk.END)
+            self.password_entry.delete(0, tk.END)
 
-    password_label = tk.Label(login_frame, text="Password:")
-    password_label.grid(row=1, column=0, padx=10, pady=5)
-    password_entry = tk.Entry(login_frame, width=30, show="*")
-    password_entry.grid(row=1, column=1, padx=10, pady=5)
+        
 
-    def authenticate():
-        username = username_entry.get().strip()
-        password = password_entry.get().strip()
+    def send_registration_email(self, firstname, lastname, email, account_number):
+        sender_email = "mduduayanda01@gmail.com"  # Your email
+        receiver_email = email
+        password = "wghb wmhi fwgn qkmu"  # Your email password
 
-        # Check if username exists in user_credentials dictionary
-        if username in user_credentials:
-            # Retrieve encrypted password for the given username
-            encrypted_password = user_credentials[username]["password"]
-            decrypted_password = decrypt_data(encrypted_password, key)
+        message = MIMEMultipart("alternative")
+        message["Subject"] = "Welcome to Virtual Vault!"
+        message["From"] = sender_email
+        message["To"] = receiver_email
 
-            # Check if entered password matches decrypted password
-            if password == decrypted_password:
-                messagebox.showinfo("Login", "Login successful!")
-            else:
-                messagebox.showerror("Login Failed", "Invalid password.")
-        else:
-            messagebox.showerror("Login Failed", "User not found.")
+        text = f"Dear {firstname} {lastname},\n\nThank you for registering with Virtual Vault. Your account has been successfully created with the following details:\n\nFirst Name: {firstname}\nLast Name: {lastname}\nEmail: {email}\nAccount Number: {account_number}\n\nPlease let us know if you have any questions.\n\nBest regards,\nVirtual Vault"
 
-    login_button = tk.Button(login_frame, text="Login", command=authenticate)
-    login_button.grid(row=2, column=0, columnspan=2, padx=10, pady=5)
+        part = MIMEText(text, "plain")
+        message.attach(part)
 
-    # Pack login frame
-    login_frame.pack(padx=20, pady=20)
+        with smtplib.SMTP("smtp.gmail.com", 587) as server:
+            server.starttls()
+            server.login(sender_email, password)
+            server.sendmail(sender_email, receiver_email, message.as_string())
 
-    # Run the Tkinter event loop for the login window
-    login_window.mainloop()
+    def show_register_form(self):
+        self.register_frame.grid()
+        self.login_frame.grid_remove()
 
+    def show_login_form(self):
+        self.login_frame.grid()
+        self.register_frame.grid_remove()
 
-# Create a Tkinter window
-window = tk.Tk()
-window.title("Secure Banking Application")
+    def login_user(self):
+        email = self.login_email_entry.get()
+        password = self.login_password_entry.get()
 
-# Set background color to light blue
-window.configure(bg="#ADD8E6")  # Hex color code for light blue
+        with open("user_data.txt", "r") as file:
+            for line in file:
+                data = line.strip().split(",")
+                if data[3] == email and data[5] == password:
+                    messagebox.showinfo("Success", "Login successful!")
+                    # Open bank_app.py page here
+                    return
+        messagebox.showerror("Error", "Invalid email or password.")
 
-# Create the main frame
-main_frame = tk.Frame(window, bg="#ADD8E6")  # Set background color of the frame to match window color
+def main():
+    root = tk.Tk()
+    app = UserRegistrationApp(root)
+    root.mainloop()
 
-# Money label
-money_label = tk.Label(main_frame, text="Money", font=("Helvetica", 24, "italic"), bg="#ADD8E6")  # Set background color of label
-money_label.grid(row=0, column=0, pady=20)
-
-# Buttons
-register_button = tk.Button(main_frame, text="Register", width=15, command=register)
-register_button.grid(row=1, column=0, pady=5)
-
-login_button = tk.Button(main_frame, text="Login", width=15, command=login)
-login_button.grid(row=2, column=0, pady=5)
-
-# Pack main frame
-main_frame.pack(pady=50)
-
-# Run the Tkinter event loop
-window.mainloop()
+if __name__ == "__main__":
+    main()
