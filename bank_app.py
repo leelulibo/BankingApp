@@ -4,9 +4,14 @@ from datetime import datetime
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from fpdf import FPDF
+from email.mime.base import MIMEBase
+from email import encoders
+
 
 class Bank:
-    def __init__(self):
+    def __init__(self, currency="$"):  # Add a currency parameter with a default value
+        self.currency = currency
         self.load_bank_data()
         self.load_transaction_log()
 
@@ -98,8 +103,13 @@ class Bank:
 
     def display_transaction_log(self):
         self.load_transaction_log()
-        return "".join(self.transaction_log)
-
+        formatted_log = ""
+        for transaction in self.transaction_log:
+            # Append each transaction with the specified currency symbol
+            formatted_log += f"{transaction.strip()} {self.currency}\n"
+        return formatted_log
+    
+    
 def make_deposit():
     amount = simpledialog.askfloat("Deposit", "How much would you like to deposit?")
     if amount is not None:  # Check if user canceled the dialog
@@ -151,8 +161,27 @@ def send_statement_email(email, window, email_entry, send_button):
     msg['To'] = receiver_email
     msg['Subject'] = "Bank Statement"
 
+    # Convert the transaction log text to a PDF file
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", size=12)
     body = bank.display_transaction_log()
-    msg.attach(MIMEText(body, 'plain'))
+    pdf.multi_cell(0, 10, body)
+    pdf_file_name = "bank_statement.pdf"
+    pdf.output(pdf_file_name)
+
+    # Attach the PDF file to the email
+    with open(pdf_file_name, "rb") as attachment:
+        part = MIMEBase("application", "octet-stream")
+        part.set_payload(attachment.read())
+
+    encoders.encode_base64(part)
+    part.add_header(
+        "Content-Disposition",
+        f"attachment; filename= {pdf_file_name}",
+    )
+
+    msg.attach(part)
 
     text = msg.as_string()
 
@@ -169,6 +198,7 @@ def send_statement_email(email, window, email_entry, send_button):
     except Exception as e:
         messagebox.showerror("Error", f"Failed to send email: {str(e)}")
 
+        
 def back_to_main(root, statement_window):
     statement_window.destroy()  # Close the statement window
     root.deiconify()  # Show the main window
@@ -179,7 +209,7 @@ def update_balance_display():
 def main():
     global bank, root
 
-    bank = Bank()
+    bank = Bank(currency='R')
 
     root = tk.Tk()
     root.title("Banking Application")
