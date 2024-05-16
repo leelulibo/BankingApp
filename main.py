@@ -3,6 +3,7 @@ from tkinter import messagebox
 import random
 import string
 import smtplib
+import re
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
@@ -23,42 +24,47 @@ class UserRegistrationApp:
         # Registration Form
         self.register_frame = tk.Frame(master)
         self.register_frame.grid(row=2, column=0, columnspan=2)
+        
+        self.id_number_label = tk.Label(self.register_frame, text="ID Number:")
+        self.id_number_label.grid(row=0, column=0, sticky="e")
+        self.id_number_entry = tk.Entry(self.register_frame)
+        self.id_number_entry.grid(row=0, column=1)
 
         self.firstname_label = tk.Label(self.register_frame, text="First Name:")
-        self.firstname_label.grid(row=0, column=0, sticky="e")
+        self.firstname_label.grid(row=1, column=0, sticky="e")
         self.firstname_entry = tk.Entry(self.register_frame)
-        self.firstname_entry.grid(row=0, column=1)
+        self.firstname_entry.grid(row=1, column=1)
 
         self.lastname_label = tk.Label(self.register_frame, text="Last Name:")
-        self.lastname_label.grid(row=1, column=0, sticky="e")
+        self.lastname_label.grid(row=2, column=0, sticky="e")
         self.lastname_entry = tk.Entry(self.register_frame)
-        self.lastname_entry.grid(row=1, column=1)
+        self.lastname_entry.grid(row=2, column=1)
 
         self.phone_label = tk.Label(self.register_frame, text="Phone Number:")
-        self.phone_label.grid(row=2, column=0, sticky="e")
+        self.phone_label.grid(row=3, column=0, sticky="e")
         self.phone_entry = tk.Entry(self.register_frame)
-        self.phone_entry.grid(row=2, column=1)
+        self.phone_entry.grid(row=3, column=1)
 
         self.email_label = tk.Label(self.register_frame, text="Email Address:")
-        self.email_label.grid(row=3, column=0, sticky="e")
+        self.email_label.grid(row=4, column=0, sticky="e")
         self.email_entry = tk.Entry(self.register_frame)
-        self.email_entry.grid(row=3, column=1)
+        self.email_entry.grid(row=4, column=1)
 
         self.account_label = tk.Label(self.register_frame, text="Account Number:")
-        self.account_label.grid(row=4, column=0, sticky="e")
+        self.account_label.grid(row=5, column=0, sticky="e")
         self.account_entry = tk.Entry(self.register_frame, state="readonly")
-        self.account_entry.grid(row=4, column=1)
+        self.account_entry.grid(row=5, column=1)
 
         self.password_label = tk.Label(self.register_frame, text="Password:")
-        self.password_label.grid(row=5, column=0, sticky="e")
+        self.password_label.grid(row=6, column=0, sticky="e")
         self.password_entry = tk.Entry(self.register_frame, show="*")
-        self.password_entry.grid(row=5, column=1)
+        self.password_entry.grid(row=6, column=1)
 
         self.generate_password_btn = tk.Button(self.register_frame, text="Generate Password", command=self.generate_password)
-        self.generate_password_btn.grid(row=5, column=2)
+        self.generate_password_btn.grid(row=6, column=2)
 
         self.register_submit_btn = tk.Button(self.register_frame, text="Register", command=self.register_user)
-        self.register_submit_btn.grid(row=6, columnspan=2)
+        self.register_submit_btn.grid(row=7, columnspan=2)
 
         # Login Form
         self.login_frame = tk.Frame(master)
@@ -99,15 +105,50 @@ class UserRegistrationApp:
         return ''.join(random.choices(string.digits, k=8))
 
     def register_user(self):
+        id_number = self.id_number_entry.get()
         firstname = self.firstname_entry.get()
         lastname = self.lastname_entry.get()
         phone = self.phone_entry.get()
         email = self.email_entry.get()
         password = self.password_entry.get()
+        
+       # Check if ID number contains only digits and has a length of 13
+        if not id_number.isdigit() or len(id_number) != 13:
+           messagebox.showerror("Error", "Invalid ID number.")
+           return
+
+      # Check if ID number already exists
+        with open("user_data.txt", "r") as file:
+            for line in file:
+                data = line.strip().split(",")
+                if data[0] == id_number:
+                    messagebox.showinfo("Existing User", "User already exists. Please log in.")
+                    self.show_login_form()  # Direct user to login form
+                    return
+            
+        # Check if first name contains only letters
+        if not firstname.isalpha():
+            messagebox.showerror("Error", "First name can only contain letters.")
+            return
+
+        # Check if last name contains only letters
+        if not lastname.isalpha():
+            messagebox.showerror("Error", "Last name can only contain letters.")
+            return
+        
+        if not phone.isdigit() or not phone.startswith('0') or len(phone) != 10:
+            messagebox.showerror("Error", "Invalid phone number.")
+            return
+        
+        if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+            messagebox.showerror("Error", "Invalid email address.")
+            return
 
         if not firstname or not lastname or not phone or not email or not password:
             messagebox.showerror("Error", "Please fill in all fields.")
             return
+        
+       
 
         account_number = self.generate_account_number()
         self.account_entry.config(state="normal")
@@ -116,7 +157,7 @@ class UserRegistrationApp:
         self.account_entry.config(state="readonly")
 
         with open("user_data.txt", "a") as file:
-            file.write(f"{firstname},{lastname},{phone},{email},{account_number},{password}\n")
+            file.write(f"{id_number},{firstname},{lastname},{phone},{email},{account_number},{password}\n")
 
         messagebox.showinfo("Success", "User registered successfully.")
         self.send_registration_email(firstname, lastname, email, account_number)
