@@ -6,24 +6,39 @@ import smtplib
 import re
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from PIL import Image, ImageTk
 
 class UserRegistrationApp:
     def __init__(self, master):
         self.master = master
         self.master.title("User Registration")
 
+        # Bank Logo
+        self.bank_logo = Image.open("2ILeFf-LogoMakr.png")  # Replace "bank_logo.png" with the path to your bank logo image
+        self.bank_logo = ImageTk.PhotoImage(self.bank_logo)
+        self.logo_label = tk.Label(master, image=self.bank_logo)
+        self.logo_label.grid(row=0, column=0, columnspan=3, pady=20)
+
+        # Choose an option label
         self.choice_label = tk.Label(master, text="Choose an option:")
-        self.choice_label.grid(row=0, column=0, columnspan=2)
+        self.choice_label.grid(row=1, column=0, columnspan=3, pady=5)
 
-        self.register_btn = tk.Button(master, text="Register", command=self.show_register_form)
-        self.register_btn.grid(row=1, column=0)
+        self.button_frame = tk.Frame(master)
+        self.button_frame.grid(row=2, column=0, columnspan=3, pady=5)
+        
 
-        self.login_btn = tk.Button(master, text="Login", command=self.show_login_form)
-        self.login_btn.grid(row=1, column=1)
+        self.register_btn = tk.Button(self.button_frame, text="Register", command=self.show_register_form)
+        self.register_btn.grid(row=0, column=0, padx=2, pady=2)
+
+        self.login_btn = tk.Button(self.button_frame, text="Login", command=self.show_login_form)
+        self.login_btn.grid(row=0, column=1, padx=2, pady=2)
+        
+        self.button_frame.grid_columnconfigure(0, weight=1)
+        self.button_frame.grid_columnconfigure(2, weight=1)
 
         # Registration Form
         self.register_frame = tk.Frame(master)
-        self.register_frame.grid(row=2, column=0, columnspan=2)
+        self.register_frame.grid(row=3, column=0, columnspan=3)
         
         self.id_number_label = tk.Label(self.register_frame, text="ID Number:")
         self.id_number_label.grid(row=0, column=0, sticky="e")
@@ -68,7 +83,7 @@ class UserRegistrationApp:
 
         # Login Form
         self.login_frame = tk.Frame(master)
-        self.login_frame.grid(row=2, column=0, columnspan=2)
+        self.login_frame.grid()
 
         self.login_email_label = tk.Label(self.login_frame, text="Email Address:")
         self.login_email_label.grid(row=0, column=0, sticky="e")
@@ -84,22 +99,12 @@ class UserRegistrationApp:
         self.login_submit_btn.grid(row=2, columnspan=2)
 
         # Initially hide login form
-        self.login_frame.grid_remove()
+        self.login_frame.grid_forget()
 
     def generate_password(self):
         password = ''.join(random.choices(string.ascii_letters + string.digits, k=12))
         self.password_entry.delete(0, tk.END)
         self.password_entry.insert(0, password)
-
-    def toggle_password_visibility(self):
-        current_show_state = self.password_entry.cget("show")
-        if current_show_state == "":
-            self.password_entry.config(show="*")
-            self.see_password_btn.config(text="See Password")
-        else:
-            self.password_entry.config(show="")
-            self.see_password_btn.config(text="Hide Password")
-    
 
     def generate_account_number(self):
         return ''.join(random.choices(string.digits, k=8))
@@ -163,11 +168,11 @@ class UserRegistrationApp:
         self.send_registration_email(firstname, lastname, email, account_number, password)
 
     def clear_fields(self):
-            self.firstname_entry.delete(0, tk.END)
-            self.lastname_entry.delete(0, tk.END)
-            self.phone_entry.delete(0, tk.END)
-            self.email_entry.delete(0, tk.END)
-            self.password_entry.delete(0, tk.END)
+        self.firstname_entry.delete(0, tk.END)
+        self.lastname_entry.delete(0, tk.END)
+        self.phone_entry.delete(0, tk.END)
+        self.email_entry.delete(0, tk.END)
+        self.password_entry.delete(0, tk.END)
 
         
 
@@ -193,11 +198,11 @@ class UserRegistrationApp:
 
     def show_register_form(self):
         self.register_frame.grid()
-        self.login_frame.grid_remove()
+        self.login_frame.grid_forget()
 
     def show_login_form(self):
         self.login_frame.grid()
-        self.register_frame.grid_remove()
+        self.register_frame.grid_forget()
 
     def login_user(self):
         email = self.login_email_entry.get()

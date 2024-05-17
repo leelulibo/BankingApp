@@ -12,10 +12,27 @@ import string
 import re
 
 class Bank:
-    def __init__(self, currency="$"):  
+    def __init__(self, currency="$", account_holder_name="", account_number="", account_holder_address=""):  
         self.currency = currency
+        self.account_holder_name = account_holder_name
+        self.account_number = account_number
+        self.account_address = account_holder_address
         self.load_bank_data()
         self.load_transaction_log()
+
+    def set_account_info(self, name, number, address):
+        self.account_holder_name = name
+        self.account_number = number
+        self.account_holder_address = address
+
+    def get_account_holder_name(self):
+        return self.account_holder_name
+
+    def get_account_number(self):
+        return self.account_number
+    
+    def get_account_holder_address(self):
+        return self.account_holder_address
 
     def load_bank_data(self):
         try:
@@ -23,6 +40,15 @@ class Bank:
                 self.balance = float(file.readline())
         except FileNotFoundError:
             self.balance = 0
+
+    def load_account_info(self):
+        try:
+            with open('AccountInfo.txt', 'r') as file:
+                data = file.readline().strip().split(',')
+                self.account_holder_name = data[0]
+                self.account_number = data[1]
+        except FileNotFoundError:
+            pass  # Handle missing file
 
     def save_bank_data(self):
         with open('BankData.txt', 'w') as file:
@@ -77,7 +103,7 @@ class Bank:
                 if not confirmation:
                     return False
                 
-                self.balance -= 8
+                self.balance -= 8  
                 
                 self.transaction_type = "Insufficient Funds Charge"
                 self.save_bank_data()
@@ -397,8 +423,16 @@ def send_statement_email(email, window):
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("Arial", size=12)
+    
+    account_holder_name = bank.get_account_holder_name()
+    account_number = bank.get_account_number()
+    pdf.cell(200, 10, f"Account Holder: {account_holder_name}", ln=True)
+    pdf.cell(200, 10, f"Account Number: {account_number}", ln=True)
+    pdf.cell(200, 10, "", ln=True)  
+    
     body = bank.display_transaction_log()
     pdf.multi_cell(0, 10, body)
+    
     pdf_file_name = "bank_statement.pdf"
     pdf.output(pdf_file_name)
 
@@ -440,13 +474,48 @@ def back_to_main(root, statement_window):
 def update_balance_display():
     balance_label.config(text=bank.display_balance())
 
+def view_statement():
+    global root
+    
+    root.withdraw()  # Hide the main window
+    
+    statement_window = tk.Toplevel()
+    statement_window.title("Statement")
+    statement_window.geometry("400x450")
+    
+    statement_text = scrolledtext.ScrolledText(statement_window, width=40, height=10)
+    statement_text.insert(tk.END, bank.display_transaction_log())
+    statement_text.pack(fill=tk.BOTH, expand=True)
+    
+    email_label = tk.Label(statement_window, text="Enter your email address:")
+    email_label.pack()
+    
+    email_entry = tk.Entry(statement_window)
+    email_entry.pack()
+    
+    send_button = tk.Button(statement_window, text="Send Statement", command=lambda: send_statement_email(email_entry.get(), statement_window, email_entry, send_button))
+    send_button.pack()
+    
+    back_button = tk.Button(statement_window, text="Back", command=lambda: back_to_main(root, statement_window))
+    back_button.pack()
+
+def back_to_main(root, statement_window):
+    statement_window.destroy()  
+    root.deiconify()  
+
 def main():
     global bank, root
 
     bank = Bank(currency='R')
+    bank.load_account_info()  # Load account holder's info from file
 
     root = tk.Tk()
     root.title("Banking Application")
+
+    # Load logo image
+    logo_image = tk.PhotoImage(file="2ILeFf-LogoMakr.png")
+    logo_label = tk.Label(root, image=logo_image)
+    logo_label.pack()
 
     deposit_button = tk.Button(root, text="Deposit", command=make_deposit)
     deposit_button.pack()
