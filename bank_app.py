@@ -144,9 +144,7 @@ def make_withdrawal():
     amount = simpledialog.askfloat("Withdrawal", "How much would you like to withdraw?")
     if amount is not None:  
         if bank.withdraw(amount):
-            update_balance_display()
-
-def send_statement_email(email, window, email_entry, send_button):
+            update_balance_display() 
 
 def view_statement():
     global root
@@ -234,7 +232,6 @@ def send_statement_email(email, window):
     pdf_file_name = "bank_statement.pdf"
     pdf.output(pdf_file_name)
 
-    with open(pdf_file_name, "rb") as attachment:
     # Encrypt the PDF file
     encrypted_pdf_file = encrypt_pdf(pdf_file_name)
 
