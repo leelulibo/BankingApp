@@ -10,6 +10,8 @@ import PyPDF2
 import random
 import string
 import re
+from email.mime.text import MIMEText
+
 
 class Bank:
     def __init__(self, currency="$", account_holder_name="", account_number="", account_holder_address=""):  
