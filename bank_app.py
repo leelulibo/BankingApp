@@ -1,6 +1,6 @@
-import tkinter as tk
 from tkinter import simpledialog, messagebox, scrolledtext
-from datetime import datetime
+from datetime import datetime, timedelta
+import tkinter as tk
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
@@ -10,6 +10,7 @@ import PyPDF2
 import random
 import string
 import re
+import os
 from email.mime.text import MIMEText
 
 
@@ -18,7 +19,8 @@ class Bank:
         self.currency = currency
         self.account_holder_name = account_holder_name
         self.account_number = account_number
-        self.account_address = account_holder_address
+        self.account_holder_address = account_holder_address
+        self.address_last_updated = None  # Store the date when the address was last updated
         self.load_bank_data()
         self.load_transaction_log()
 
@@ -35,6 +37,16 @@ class Bank:
     
     def get_account_holder_address(self):
         return self.account_holder_address
+
+    def update_address(self, new_address):
+        self.account_holder_address = new_address
+        self.address_last_updated = datetime.now()
+
+    def address_needs_update(self):
+        if self.address_last_updated is None:
+            return True
+        # Check if it has been more than 14 days since the address was last updated
+        return datetime.now() - self.address_last_updated > timedelta(days=14)
 
     def load_bank_data(self):
         try:
@@ -237,6 +249,23 @@ class UserRegistrationApp:
         self.login_submit_btn.grid(row=2, columnspan=2)
 
         self.login_frame.grid_remove()
+        
+        # Add Address section
+        self.address_label = tk.Label(self.register_frame, text="Address:")
+        self.address_label.grid(row=7, column=0, sticky="e")
+        self.address_entry = tk.Entry(self.register_frame)
+        self.address_entry.grid(row=7, column=1)
+
+        self.add_address_btn = tk.Button(self.register_frame, text="Add/Update Address", command=self.add_update_address)
+        self.add_address_btn.grid(row=8, columnspan=2)
+
+    def add_update_address(self):
+        new_address = self.address_entry.get()
+        if new_address.strip() == "":
+            messagebox.showerror("Error", "Please enter a valid address.")
+            return
+        bank.update_address(new_address)
+        messagebox.showinfo("Success", "Address updated successfully!")
 
     def generate_password(self):
         password = ''.join(random.choices(string.ascii_letters + string.digits, k=12))
@@ -369,7 +398,14 @@ def view_statement():
     statement_window.title("Statement")
     statement_window.geometry("400x450")
 
+    # Get logged-in user's information from the Bank instance
+    account_holder_name = bank.get_account_holder_name()
+    account_number = bank.get_account_number()
+    account_holder_address = bank.get_account_holder_address()
+
     statement_text = scrolledtext.ScrolledText(statement_window, width=40, height=10)
+    statement_text.insert(tk.END, f"Account Holder: {account_holder_name}\nAccount Number: {account_number}\n")
+    statement_text.insert(tk.END, f"Address: {account_holder_address}\n\n")
     statement_text.insert(tk.END, bank.display_transaction_log())
     statement_text.pack(fill=tk.BOTH, expand=True)
 
@@ -426,11 +462,17 @@ def send_statement_email(email, window):
     pdf.add_page()
     pdf.set_font("Arial", size=12)
     
+    logo_path = "2ILeFf-LogoMakr.png"  # Path to your logo file
+    if os.path.exists(logo_path):
+        pdf.image(logo_path, x=150, y=10, w=50)  # Adjust x, y, and w (width) as needed
+    
     account_holder_name = bank.get_account_holder_name()
     account_number = bank.get_account_number()
+    account_holder_address = bank.get_account_holder_address()
     pdf.cell(200, 10, f"Account Holder: {account_holder_name}", ln=True)
     pdf.cell(200, 10, f"Account Number: {account_number}", ln=True)
-    pdf.cell(200, 10, "", ln=True)  
+    pdf.cell(400, 10, f"Address: {account_holder_address}", ln=True)
+    pdf.cell(200, 10, "", ln=True)   
     
     body = bank.display_transaction_log()
     pdf.multi_cell(0, 10, body)
