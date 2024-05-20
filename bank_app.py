@@ -11,8 +11,6 @@ import random
 import string
 import re
 from email.mime.text import MIMEText
-import os
-import tkinter as tk 
 
 
 class Bank:
@@ -420,24 +418,19 @@ def send_statement_email(email, window):
         messagebox.showerror("Error", "Please enter a valid email address.")
         return
 
-    sender_email = "mduduayanda01@gmail.com"
+    sender_email = "mduduayanda01@gmail.com"  
     receiver_email = email
-    password = "wghb wmhi fwgn qkmu"
+    password = "wghb wmhi fwgn qkmu"  
 
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("Arial", size=12)
     
-    # Add logo to the PDF
-    logo_path = "2ILeFf-LogoMakr.png"  # Path to your logo file
-    if os.path.exists(logo_path):
-        pdf.image(logo_path, x=150, y=10, w=50)  # Adjust x, y, and w (width) as needed
-
     account_holder_name = bank.get_account_holder_name()
     account_number = bank.get_account_number()
     pdf.cell(200, 10, f"Account Holder: {account_holder_name}", ln=True)
     pdf.cell(200, 10, f"Account Number: {account_number}", ln=True)
-    pdf.cell(200, 10, "", ln=True)
+    pdf.cell(200, 10, "", ln=True)  
     
     body = bank.display_transaction_log()
     pdf.multi_cell(0, 10, body)
@@ -471,7 +464,7 @@ def send_statement_email(email, window):
         server.sendmail(sender_email, receiver_email, text)
         server.quit()
         messagebox.showinfo("Success", "Statement sent successfully!")
-        window.destroy()
+        window.destroy()  
     except Exception as e:
         messagebox.showerror("Error", f"Failed to send email: {str(e)}")
 
@@ -527,6 +520,7 @@ def main():
     logo_image = tk.PhotoImage(file="2ILeFf-LogoMakr.png")
     logo_label = tk.Label(root, image=logo_image)
     logo_label.pack()
+
 
     deposit_button = tk.Button(root, text="Deposit", command=make_deposit)
     deposit_button.pack()
