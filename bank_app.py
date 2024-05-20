@@ -10,8 +10,8 @@ import PyPDF2
 import random
 import string
 import re
-from tkinter import PhotoImage
-import os
+from email.mime.text import MIMEText
+
 
 class Bank:
     def __init__(self, currency="R", account_holder_name="", account_number="", account_holder_address=""):  
