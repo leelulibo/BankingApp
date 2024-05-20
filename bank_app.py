@@ -516,14 +516,10 @@ def main():
 
 
     # Load logo image
-    try:
-       logo_image = PhotoImage(file="2ILeFf-LogoMakr.png")
-       logo_label = tk.Label(root, image=logo_image)
-       logo_label.pack()
-
-    except Exception as e:
-        print(f"Error loading image: {e}") 
-    
+   # Load logo image
+    logo_image = tk.PhotoImage(file="2ILeFf-LogoMakr.png")
+    logo_label = tk.Label(root, image=logo_image)
+    logo_label.pack()
 
     deposit_button = tk.Button(root, text="Deposit", command=make_deposit)
     deposit_button.pack()
