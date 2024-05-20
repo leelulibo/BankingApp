@@ -495,7 +495,7 @@ def view_statement():
     email_entry = tk.Entry(statement_window)
     email_entry.pack()
     
-    send_button = tk.Button(statement_window, text="Send Statement", command=lambda: send_statement_email(email_entry.get(), statement_window, email_entry, send_button))
+    send_button = tk.Button(statement_window, text="Send Statement", command=lambda: send_statement_email(email_entry.get(), statement_window))
     send_button.pack()
     
     back_button = tk.Button(statement_window, text="Back", command=lambda: back_to_main(root, statement_window))
