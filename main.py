@@ -4,7 +4,7 @@ import random
 import string
 import smtplib
 import re
-import subprocess
+import os
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from PIL import Image, ImageTk
@@ -81,6 +81,8 @@ class UserRegistrationApp:
 
         self.register_submit_btn = tk.Button(self.register_frame, text="Register", command=self.register_user)
         self.register_submit_btn.grid(row=7, columnspan=2)
+        
+
 
         # Login Form
         self.login_frame = tk.Frame(master)
@@ -99,6 +101,7 @@ class UserRegistrationApp:
         self.login_submit_btn = tk.Button(self.login_frame, text="Login", command=self.login_user)
         self.login_submit_btn.grid(row=2, columnspan=2)
 
+
         # Initially hide login form
         self.login_frame.grid_forget()
 
@@ -106,7 +109,7 @@ class UserRegistrationApp:
         password = ''.join(random.choices(string.ascii_letters + string.digits, k=12))
         self.password_entry.delete(0, tk.END)
         self.password_entry.insert(0, password)
-
+    
     def generate_account_number(self):
         return ''.join(random.choices(string.digits, k=8))
 
@@ -208,12 +211,34 @@ class UserRegistrationApp:
     def login_user(self):
         email = self.login_email_entry.get()
         password = self.login_password_entry.get()
+        
+         # Email validation using regular expression
+        if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+            messagebox.showerror("Error", "Invalid email address.")
+            return
         with open("user_data.txt", "r") as file:
             for line in file:
                 data = line.strip().split(",")
-                if data[4] == email and data[6] == password:
+                if data[3] == email and data[5] == password:
                     messagebox.showinfo("Success", "Login successful!")
-                    subprocess.run(["python", "bank_app.py"])  # Open bank_app.py file
+                    
+                    if os.path.exists(f"{data[0]}_TransactionLog.txt") and os.path.exists(f"{data[0]}_BankData.txt"):
+                        # Open existing files
+                        with open(f"{data[0]}_TransactionLog.txt", "r") as trans_file, open(f"{data[0]}_BankData.txt", "r") as bank_file:
+                            # You can do something with these files here
+                            pass
+                    else:
+                        # Create new files for the user
+                        with open(f"{data[0]}_TransactionLog.txt", "w") as trans_file, open(f"{data[0]}_BankData.txt", "w") as bank_file:
+                            # You can initialize these files if needed
+                            pass
+                        
+                    # Close the login window
+                    self.master.destroy()
+                    
+                    # Open bank_app.py window here
+                    import bank_app  # Importing bank_app.py
+                    bank_app.main()  # Call the main function of bank_app.py to open its window
                     return
         messagebox.showerror("Error", "Invalid email or password.")
 def main():

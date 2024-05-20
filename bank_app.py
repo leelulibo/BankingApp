@@ -7,8 +7,11 @@ from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from email import encoders
 from fpdf import FPDF
-
-
+import PyPDF2
+import random
+import string
+import re
+from email.mime.text import MIMEText
 
 
 class Bank:
@@ -123,7 +126,7 @@ def make_withdrawal():
     amount = simpledialog.askfloat("Withdrawal", "How much would you like to withdraw?")
     if amount is not None:  # Check if user canceled the dialog
         if bank.withdraw(amount):
-            update_balance_display()
+            update_balance_display() 
 
 
 def view_statement():
@@ -238,6 +241,34 @@ def back_to_main(root, statement_window):
 def update_balance_display():
     balance_label.config(text=bank.display_balance())
 
+def view_statement():
+    global root
+    
+    root.withdraw()  # Hide the main window
+    
+    statement_window = tk.Toplevel()
+    statement_window.title("Statement")
+    statement_window.geometry("400x450")
+    
+    statement_text = scrolledtext.ScrolledText(statement_window, width=40, height=10)
+    statement_text.insert(tk.END, bank.display_transaction_log())
+    statement_text.pack(fill=tk.BOTH, expand=True)
+    
+    email_label = tk.Label(statement_window, text="Enter your email address:")
+    email_label.pack()
+    
+    email_entry = tk.Entry(statement_window)
+    email_entry.pack()
+    
+    send_button = tk.Button(statement_window, text="Send Statement", command=lambda: send_statement_email(email_entry.get(), statement_window))
+    send_button.pack()
+    
+    back_button = tk.Button(statement_window, text="Back", command=lambda: back_to_main(root, statement_window))
+    back_button.pack()
+
+def back_to_main(root, statement_window):
+    statement_window.destroy()  
+    root.deiconify()  
 
 def main():
     global bank, root
