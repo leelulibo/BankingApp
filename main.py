@@ -4,6 +4,7 @@ import random
 import string
 import smtplib
 import re
+import subprocess
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from PIL import Image, ImageTk
@@ -21,7 +22,7 @@ class UserRegistrationApp:
 
         # Choose an option label
         self.choice_label = tk.Label(master, text="Choose an option:")
-        self.choice_label.grid(row=1, column=0, columnspan=3, pady=5)
+        self.choice_label.grid(row=1, column=0, columnspan=3, pady=1)
 
         self.button_frame = tk.Frame(master)
         self.button_frame.grid(row=2, column=0, columnspan=3, pady=5)
@@ -207,16 +208,14 @@ class UserRegistrationApp:
     def login_user(self):
         email = self.login_email_entry.get()
         password = self.login_password_entry.get()
-
         with open("user_data.txt", "r") as file:
             for line in file:
                 data = line.strip().split(",")
-                if data[3] == email and data[5] == password:
+                if data[4] == email and data[6] == password:
                     messagebox.showinfo("Success", "Login successful!")
-                    # Open bank_app.py page here
+                    subprocess.run(["python", "bank_app.py"])  # Open bank_app.py file
                     return
         messagebox.showerror("Error", "Invalid email or password.")
-
 def main():
     root = tk.Tk()
     app = UserRegistrationApp(root)

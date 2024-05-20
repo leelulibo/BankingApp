@@ -4,7 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="17b8a256-9e35-4982-b10e-50c4d501ab87" name="Changes" comment="1st push" />
+    <list default="true" id="17b8a256-9e35-4982-b10e-50c4d501ab87" name="Changes" comment="1st push">
+      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -93,7 +95,7 @@
     "Python.main.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "git-widget-placeholder": "main",
+    "git-widget-placeholder": "Lheza",
     "last_opened_file_path": "C:/Users/Leletu.Jozana/BankingApp",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
@@ -153,6 +155,7 @@
       <workItem from="1715675511476" duration="8681000" />
       <workItem from="1715686919516" duration="188000" />
       <workItem from="1715687163194" duration="1648000" />
+      <workItem from="1715935842593" duration="42000" />
     </task>
     <task id="LOCAL-00001" summary="1st push">
       <option name="closed" value="true" />
@@ -228,10 +231,18 @@
     {
       "branch": "main",
       "currentBranchFilter": true
+    },
+    {
+      "branch": "main",
+      "currentBranchFilter": true
+    },
+    {
+      "branch": "Lheza",
+      "currentBranchFilter": true
     }
   ],
   "lastFilter": {
-    "branch": "main",
+    "branch": "Lheza",
     "currentBranchFilter": true
   }
 }]]></component>
