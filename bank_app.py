@@ -10,9 +10,11 @@ import PyPDF2
 import random
 import string
 import re
+from tkinter import PhotoImage
+import os
 
 class Bank:
-    def __init__(self, currency="$", account_holder_name="", account_number="", account_holder_address=""):  
+    def __init__(self, currency="R", account_holder_name="", account_number="", account_holder_address=""):  
         self.currency = currency
         self.account_holder_name = account_holder_name
         self.account_number = account_number
@@ -493,7 +495,7 @@ def view_statement():
     email_entry = tk.Entry(statement_window)
     email_entry.pack()
     
-    send_button = tk.Button(statement_window, text="Send Statement", command=lambda: send_statement_email(email_entry.get(), statement_window, email_entry, send_button))
+    send_button = tk.Button(statement_window, text="Send Statement", command=lambda: send_statement_email(email_entry.get(), statement_window))
     send_button.pack()
     
     back_button = tk.Button(statement_window, text="Back", command=lambda: back_to_main(root, statement_window))
@@ -512,10 +514,16 @@ def main():
     root = tk.Tk()
     root.title("Banking Application")
 
+
     # Load logo image
-    logo_image = tk.PhotoImage(file="2ILeFf-LogoMakr.png")
-    logo_label = tk.Label(root, image=logo_image)
-    logo_label.pack()
+    try:
+       logo_image = PhotoImage(file="2ILeFf-LogoMakr.png")
+       logo_label = tk.Label(root, image=logo_image)
+       logo_label.pack()
+
+    except Exception as e:
+        print(f"Error loading image: {e}") 
+    
 
     deposit_button = tk.Button(root, text="Deposit", command=make_deposit)
     deposit_button.pack()
