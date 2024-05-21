@@ -233,6 +233,9 @@ class UserRegistrationApp:
                         with open(f"{data[0]}_TransactionLog.txt", "w") as trans_file, open(f"{data[0]}_BankData.txt", "w") as bank_file:
                             # You can initialize these files if needed
                             pass
+                        
+                    # Close the login window
+                    self.master.destroy()
                     
                     # Open bank_app.py window here
                     import bank_app  # Importing bank_app.py
