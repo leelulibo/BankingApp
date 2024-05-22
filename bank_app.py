@@ -5,6 +5,7 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
 from email import encoders
+<<<<<<< HEAD
 from fpdf import FPDF
 import PyPDF2
 import random
@@ -12,6 +13,9 @@ import string
 import re
 import os
 from email.mime.text import MIMEText
+=======
+from main import register_user, login_user
+>>>>>>> e27ec71b25e35ffea47d703bf91abf980aac0010
 
 
 class Bank:
@@ -139,10 +143,11 @@ class Bank:
     def display_balance(self):
         return f"Current Balance: ${self.balance}"
 
-    def display_transaction_log(self):
+    def display_transaction_log(self, user_email):
         self.load_transaction_log()
         formatted_log = ""
         for transaction in self.transaction_log:
+<<<<<<< HEAD
             formatted_log += f"{transaction.strip()} {self.currency}\n"
         return formatted_log
 
@@ -375,6 +380,18 @@ class UserRegistrationApp:
         return ''.join(random.choices(string.digits, k=8))
 
 
+=======
+         data = transaction.strip().split(":")
+        if len(data) > 1:
+            transaction_email = data[1].strip()
+            if transaction_email == user_email:
+                formatted_log += f"{transaction.strip()} {self.currency}\n"
+            return formatted_log
+
+   
+    
+    
+>>>>>>> e27ec71b25e35ffea47d703bf91abf980aac0010
 def make_deposit():
     amount = simpledialog.askfloat("Deposit", "How much would you like to deposit?")
     if amount is not None:  
@@ -547,7 +564,7 @@ def back_to_main(root, statement_window):
     statement_window.destroy()  
     root.deiconify()  
 
-def main():
+def bank_main():
     global bank, root
 
     bank = Bank(currency='R')
@@ -581,4 +598,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    bank_main()

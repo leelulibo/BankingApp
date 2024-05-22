@@ -7,7 +7,11 @@ import re
 import os
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+<<<<<<< HEAD
 from PIL import Image, ImageTk
+=======
+from bank_app import bank_main
+>>>>>>> e27ec71b25e35ffea47d703bf91abf980aac0010
 
 class UserRegistrationApp:
     def __init__(self, master):
@@ -222,6 +226,7 @@ class UserRegistrationApp:
                 data = line.strip().split(",")
                 if data[4] == email and data[6] == password:  # Adjusted index for email and password
                     messagebox.showinfo("Success", "Login successful!")
+<<<<<<< HEAD
                     
                     if os.path.exists(f"{data[0]}_TransactionLog.txt") and os.path.exists(f"{data[0]}_BankData.txt"):
                         # Open existing files
@@ -240,6 +245,11 @@ class UserRegistrationApp:
                     # Open bank_app.py window here
                     import bank_app  # Importing bank_app.py
                     bank_app.main()  # Call the main function of bank_app.py to open its window
+=======
+                    # Open bank_app.py page here
+                    self.master.destroy()
+                    bank_main()
+>>>>>>> e27ec71b25e35ffea47d703bf91abf980aac0010
                     return
         messagebox.showerror("Error", "Invalid email or password.")
 
