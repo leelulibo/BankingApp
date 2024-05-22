@@ -5,13 +5,7 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
 from email import encoders
-from fpdf import FPDF
-import PyPDF2
-import random
-import string
-import re
-import os
-from email.mime.text import MIMEText
+from main import register_user, login_user
 
 
 class Bank:
@@ -139,12 +133,16 @@ class Bank:
     def display_balance(self):
         return f"Current Balance: ${self.balance}"
 
-    def display_transaction_log(self):
+    def display_transaction_log(self, user_email):
         self.load_transaction_log()
         formatted_log = ""
         for transaction in self.transaction_log:
-            formatted_log += f"{transaction.strip()} {self.currency}\n"
-        return formatted_log
+         data = transaction.strip().split(":")
+        if len(data) > 1:
+            transaction_email = data[1].strip()
+            if transaction_email == user_email:
+                formatted_log += f"{transaction.strip()} {self.currency}\n"
+            return formatted_log
 
 
 def encrypt_pdf(pdf_file_name):
@@ -518,36 +516,7 @@ def back_to_main(root, statement_window):
 def update_balance_display():
     balance_label.config(text=bank.display_balance())
 
-def view_statement():
-    global root
-    
-    root.withdraw()  # Hide the main window
-    
-    statement_window = tk.Toplevel()
-    statement_window.title("Statement")
-    statement_window.geometry("400x450")
-    
-    statement_text = scrolledtext.ScrolledText(statement_window, width=40, height=10)
-    statement_text.insert(tk.END, bank.display_transaction_log())
-    statement_text.pack(fill=tk.BOTH, expand=True)
-    
-    email_label = tk.Label(statement_window, text="Enter your email address:")
-    email_label.pack()
-    
-    email_entry = tk.Entry(statement_window)
-    email_entry.pack()
-    
-    send_button = tk.Button(statement_window, text="Send Statement", command=lambda: send_statement_email(email_entry.get(), statement_window))
-    send_button.pack()
-    
-    back_button = tk.Button(statement_window, text="Back", command=lambda: back_to_main(root, statement_window))
-    back_button.pack()
-
-def back_to_main(root, statement_window):
-    statement_window.destroy()  
-    root.deiconify()  
-
-def main():
+def bank_main():
     global bank, root
 
     bank = Bank(currency='R')
@@ -581,4 +550,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    bank_main()
