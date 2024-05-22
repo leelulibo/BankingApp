@@ -2,7 +2,8 @@ import tkinter as tk
 from tkinter import simpledialog, messagebox, scrolledtext
 from bank_backend import Bank
 import customtkinter as ctk
-
+from PIL import Image, ImageTk
+from backend import register_user
 
 
 class BankApp:
@@ -11,7 +12,7 @@ class BankApp:
         self.master.geometry("450x520")
         self.master.title("Banking Application")
         self.bank = Bank(user_id, currency='R')
-
+        
         self.deposit_button = ctk.CTkButton(master, text="Deposit", command=self.make_deposit)
         self.deposit_button.pack()
 
@@ -20,9 +21,14 @@ class BankApp:
 
         self.statement_button = ctk.CTkButton(master, text="View Statement", command=self.view_statement)
         self.statement_button.pack()
+        
+        self.update_details_button = ctk.CTkButton(master, text="Update Details", command=self.update_details)
+        self.update_details_button.pack()
+        
 
         self.balance_label = ctk.CTkLabel(master, text=self.bank.display_balance())
         self.balance_label.pack()
+        
         
         self.create_transaction_table()
         
@@ -109,3 +115,57 @@ class BankApp:
             label.grid(row=0, column=col, padx=5, pady=5)
         # Repopulate the table with updated transactions
         self.populate_transaction_table()
+        
+    def update_details(self):
+        update_window = ctk.CTkToplevel()
+        update_window.title("Update Personal Details")
+        update_window.geometry("300x300")
+
+        # Labels and entry fields for updating personal details
+        firstname_label = ctk.CTkLabel(update_window, text="First Name:")
+        firstname_label.pack()
+
+        firstname_entry = ctk.CTkEntry(update_window)
+        firstname_entry.pack()
+
+        lastname_label = ctk.CTkLabel(update_window, text="Last Name:")
+        lastname_label.pack()
+
+        lastname_entry = ctk.CTkEntry(update_window)
+        lastname_entry.pack()
+
+        phone_label = ctk.CTkLabel(update_window, text="Phone Number:")
+        phone_label.pack()
+
+        phone_entry = ctk.CTkEntry(update_window)
+        phone_entry.pack()
+
+        address_label = ctk.CTkLabel(update_window, text="Address:")
+        address_label.pack()
+
+        address_entry = ctk.CTkEntry(update_window)
+        address_entry.pack()
+
+        def update_and_send_email():
+            firstname = firstname_entry.get()
+            lastname = lastname_entry.get()
+            phone = phone_entry.get()
+            address = address_entry.get()
+
+            # Update details in the backend
+            self.bank.update_user_details(firstname, lastname, phone, address)
+
+            # Send updated details to user's email
+            try:
+                self.bank.send_update_details_email(firstname, lastname, phone, address)
+                messagebox.showinfo("Success", "Details updated and email sent successfully!")
+            except Exception as e:
+                messagebox.showerror("Error", f"Failed to send email: {str(e)}")
+
+            # Close the update window after updating
+            update_window.destroy()
+
+        submit_button = ctk.CTkButton(update_window, text="Submit", command=update_and_send_email)
+        submit_button.pack()    
+     
+        
