@@ -288,7 +288,7 @@ class UserRegistrationApp:
             for line in file:
                 data = line.strip().split(",")
                 if data[0] == id_number:
-                    messagebox.showinfo("Existing User", "User already exists. Please log in.")
+                    messagebox.showinfo("Existing User", "User with this ID number already exists. Please log in or use a different ID number.")
                     self.show_login_form()  
                     return
             
