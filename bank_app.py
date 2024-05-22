@@ -6,6 +6,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
 from email import encoders
 <<<<<<< HEAD
+<<<<<<< HEAD
 from fpdf import FPDF
 import PyPDF2
 import random
@@ -16,6 +17,9 @@ from email.mime.text import MIMEText
 =======
 from main import register_user, login_user
 >>>>>>> e27ec71b25e35ffea47d703bf91abf980aac0010
+=======
+from main import register_user, login_user
+>>>>>>> a80aa6833550fef93f73a8fc18d4cc3e88d088f4
 
 
 class Bank:
@@ -148,8 +152,17 @@ class Bank:
         formatted_log = ""
         for transaction in self.transaction_log:
 <<<<<<< HEAD
+<<<<<<< HEAD
             formatted_log += f"{transaction.strip()} {self.currency}\n"
         return formatted_log
+=======
+         data = transaction.strip().split(":")
+        if len(data) > 1:
+            transaction_email = data[1].strip()
+            if transaction_email == user_email:
+                formatted_log += f"{transaction.strip()} {self.currency}\n"
+            return formatted_log
+>>>>>>> a80aa6833550fef93f73a8fc18d4cc3e88d088f4
 
 
 def encrypt_pdf(pdf_file_name):
@@ -293,7 +306,7 @@ class UserRegistrationApp:
             for line in file:
                 data = line.strip().split(",")
                 if data[0] == id_number:
-                    messagebox.showinfo("Existing User", "User already exists. Please log in.")
+                    messagebox.showinfo("Existing User", "User with this ID number already exists. Please log in or use a different ID number.")
                     self.show_login_form()  
                     return
             
@@ -380,6 +393,7 @@ class UserRegistrationApp:
         return ''.join(random.choices(string.digits, k=8))
 
 
+<<<<<<< HEAD
 =======
          data = transaction.strip().split(":")
         if len(data) > 1:
@@ -392,6 +406,8 @@ class UserRegistrationApp:
     
     
 >>>>>>> e27ec71b25e35ffea47d703bf91abf980aac0010
+=======
+>>>>>>> a80aa6833550fef93f73a8fc18d4cc3e88d088f4
 def make_deposit():
     amount = simpledialog.askfloat("Deposit", "How much would you like to deposit?")
     if amount is not None:  
@@ -534,35 +550,6 @@ def back_to_main(root, statement_window):
 
 def update_balance_display():
     balance_label.config(text=bank.display_balance())
-
-def view_statement():
-    global root
-    
-    root.withdraw()  # Hide the main window
-    
-    statement_window = tk.Toplevel()
-    statement_window.title("Statement")
-    statement_window.geometry("400x450")
-    
-    statement_text = scrolledtext.ScrolledText(statement_window, width=40, height=10)
-    statement_text.insert(tk.END, bank.display_transaction_log())
-    statement_text.pack(fill=tk.BOTH, expand=True)
-    
-    email_label = tk.Label(statement_window, text="Enter your email address:")
-    email_label.pack()
-    
-    email_entry = tk.Entry(statement_window)
-    email_entry.pack()
-    
-    send_button = tk.Button(statement_window, text="Send Statement", command=lambda: send_statement_email(email_entry.get(), statement_window))
-    send_button.pack()
-    
-    back_button = tk.Button(statement_window, text="Back", command=lambda: back_to_main(root, statement_window))
-    back_button.pack()
-
-def back_to_main(root, statement_window):
-    statement_window.destroy()  
-    root.deiconify()  
 
 def bank_main():
     global bank, root
