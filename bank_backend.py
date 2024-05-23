@@ -1,12 +1,10 @@
 from datetime import datetime, timedelta
 import smtplib
 from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-from fpdf import FPDF
 from email.mime.base import MIMEBase
 from email import encoders
+from fpdf import FPDF
 import os
-from tkinter import messagebox, Tk
 import PyPDF2
 
 class Bank:
@@ -16,7 +14,7 @@ class Bank:
         self.account_holder_name = account_holder_name
         self.account_number = account_number
         self.account_holder_address = account_holder_address
-        self.address_last_updated = None  # Store the date when the address was last updated
+        self.address_last_updated = None
         self.bank_data_file = f"{user_id}_BankData.txt"
         self.transaction_log_file = f"{user_id}_TransactionLog.txt"
         self.load_bank_data()
@@ -43,12 +41,7 @@ class Bank:
     def address_needs_update(self):
         if self.address_last_updated is None:
             return True
-        # Check if it has been more than 14 days since the address was last updated
         return datetime.now() - self.address_last_updated > timedelta(days=14)    
-        
-
-    def get_user_file_path(self, filename):
-        return f"{self.user_id}_{filename}"
 
     def load_bank_data(self):
         try:
@@ -60,8 +53,6 @@ class Bank:
     def save_bank_data(self):
         with open(self.bank_data_file, 'w') as file:
             file.write(str(self.balance))
-            
-            
 
     def load_transaction_log(self):
         try:
@@ -73,7 +64,7 @@ class Bank:
     def save_transaction_log(self, transaction):
         with open(self.transaction_log_file, 'a') as file:
             file.write(transaction)
-            
+
     def get_transactions(self):
         transactions = []
         for transaction in self.transaction_log:
@@ -87,23 +78,22 @@ class Bank:
             if self.amount <= 0 or self.amount % 10 != 0:
                 raise ValueError("Invalid input: Please enter a valid amount in multiples of 10.")
             
-            confirmation = messagebox.askyesno("Deposit Charge", "A charge of R10 will be applied for this transaction. Do you want to continue?")
-            if not confirmation:
+            confirmation = True # Use a variable to check the confirmation
+            if confirmation:
+                self.amount -= 10
+                self.balance += self.amount
+                self.transaction_type = "Deposit"
+                self.save_bank_data()
+                transaction = f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} {self.transaction_type}: ${self.amount}\n"
+                self.save_transaction_log(transaction)
+                
+                charge_transaction = f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Deposit Charge: $10.00\n"
+                self.save_transaction_log(charge_transaction)
+                
+                return True
+            else:
                 return False
-            
-            self.amount -= 10
-            self.balance += self.amount
-            self.transaction_type = "Deposit"
-            self.save_bank_data()
-            transaction = f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} {self.transaction_type}: ${self.amount}\n"
-            self.save_transaction_log(transaction)
-            
-            charge_transaction = f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} Deposit Charge: $10.00\n"
-            self.save_transaction_log(charge_transaction)
-            
-            return True
         except ValueError as e:
-            messagebox.showerror("Error", str(e))
             return False
 
     def withdraw(self, amount):
@@ -112,17 +102,16 @@ class Bank:
             if self.amount <= 0 or self.amount % 10 != 0:
                 raise ValueError("Invalid input: Please enter a valid amount in multiples of 10.")
             if self.amount > self.balance:
-                confirmation = messagebox.askyesno("Withdrawal Charge", "A charge of R8 will be applied for withdrawing above your balance. Do you want to continue?")
-                if not confirmation:
+                confirmation = True # Use a variable to check the confirmation
+                if confirmation:
+                    self.balance -= 8
+                    self.transaction_type = "Insufficient Funds Charge"
+                    self.save_bank_data()
+                    transaction = f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} {self.transaction_type}: $8.00\n"
+                    self.save_transaction_log(transaction)
                     return False
-                
-                self.balance -= 8
-                self.transaction_type = "Insufficient Funds Charge"
-                self.save_bank_data()
-                transaction = f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} {self.transaction_type}: $8.00\n"
-                self.save_transaction_log(transaction)
-                messagebox.showinfo("Transaction", "Insufficient funds. R8 charged.")
-                return False
+                else:
+                    return False
             else:
                 self.balance -= self.amount
                 self.transaction_type = "Withdrawal"
@@ -131,12 +120,10 @@ class Bank:
                 self.save_transaction_log(transaction)
                 return True
         except ValueError as e:
-            messagebox.showerror("Error", str(e))
             return False
 
     def display_balance(self):
         return f"Current Balance: {self.currency}{self.balance:.2f}"
-    
 
     def display_transaction_log(self):
         self.load_transaction_log()
@@ -145,6 +132,26 @@ class Bank:
             formatted_log += f"{transaction.strip()} {self.currency}\n"
         return formatted_log
     
+    def create_statement_pdf(self):
+        pdf = FPDF()
+        pdf.add_page()
+        pdf.set_font("Arial", size=12)
+
+        # Add logo to the PDF
+        pdf.image("2ILeFf-LogoMakr.png", x=120, y=10, w=80)
+
+        pdf.cell(200, 10, txt=f"Account Holder Name: {self.account_holder_name}", ln=True, align="L")
+        pdf.cell(200, 10, txt=f"Account Number: {self.account_number}", ln=True, align="L")
+        pdf.cell(200, 10, txt=f"Account Holder Address: {self.account_holder_address}", ln=True, align="L")
+        pdf.cell(200, 10, txt="", ln=True)
+
+        body = self.display_transaction_log()
+        pdf.multi_cell(0, 10, body)
+
+        pdf_file_name = f"{self.user_id}_bank_statement.pdf"
+        pdf.output(pdf_file_name)
+        return pdf_file_name
+
     def send_statement_email(self, email):
         sender_email = "mduduayanda01@gmail.com"
         receiver_email = email
@@ -155,24 +162,7 @@ class Bank:
         msg['To'] = receiver_email
         msg['Subject'] = "Bank Statement"
 
-        # Create a PDF instance
-        pdf = FPDF()
-        pdf.add_page()
-        pdf.set_font("Arial", size=12)
-
-        # Add account holder details to the PDF
-        pdf.cell(200, 10, txt=f"Account Holder Name: {self.account_holder_name}", ln=True, align="L")
-        pdf.cell(200, 10, txt=f"Account Number: {self.account_number}", ln=True, align="L")
-        pdf.cell(200, 10, txt=f"Account Holder Address: {self.account_holder_address}", ln=True, align="L")
-        pdf.cell(200, 10, txt="", ln=True)  # Add an empty line for spacing
-
-        # Add transaction log to the PDF
-        body = self.display_transaction_log()
-        pdf.multi_cell(0, 10, body)
-
-        # Save PDF to a file
-        pdf_file_name = "bank_statement.pdf"
-        pdf.output(pdf_file_name)
+        pdf_file_name = self.create_statement_pdf()  # Create PDF statement
 
         # Attach PDF to the email
         with open(pdf_file_name, "rb") as attachment:
@@ -181,7 +171,6 @@ class Bank:
 
         encoders.encode_base64(part)
         part.add_header("Content-Disposition", f"attachment; filename= {pdf_file_name}")
-
         msg.attach(part)
 
         text = msg.as_string()
@@ -191,34 +180,9 @@ class Bank:
         server.starttls()
         server.login(sender_email, password)
         server.sendmail(sender_email, receiver_email, text)
-        # Do not close the SMTP connection here
         server.quit()
 
-   
-        # Return True indicating success
-        return True
+        os.remove(pdf_file_name)  # Remove the temporary PDF file
 
-    def encrypt_pdf(self, pdf_file_name):
-        output_pdf_file = "encrypted_bank_statement.pdf"
-        pdf_writer = PyPDF2.PdfWriter()
-        with open(pdf_file_name, "rb") as pdf_file:
-            pdf_reader = PyPDF2.PdfReader(pdf_file)
-            for page_num in range(len(pdf_reader.pages)):
-                pdf_writer.add_page(pdf_reader.pages[page_num])
-            pdf_writer.encrypt("12345")  
-            with open(output_pdf_file, "wb") as encrypted_pdf_file:
-                pdf_writer.write(encrypted_pdf_file)
-        return output_pdf_file
-
-    def decrypt_pdf(self, encrypted_pdf_file):
-        decrypted_pdf_file = "decrypted_bank_statement.pdf"
-        with open(encrypted_pdf_file, "rb") as pdf_file:
-            pdf_reader = PyPDF2.PdfReader(pdf_file)
-            if pdf_reader.is_encrypted:
-                pdf_reader.decrypt("12345")  
-            pdf_writer = PyPDF2.PdfWriter()
-            for page_num in range(len(pdf_reader.pages)):
-                pdf_writer.add_page(pdf_reader.pages[page_num])
-            with open(decrypted_pdf_file, "wb") as decrypted_pdf:
-                pdf_writer.write(decrypted_pdf)
-        return decrypted_pdf_file  
+# Example usage:
+bank = Bank(user_id="123456", account_holder_name="John Doe", account_number="1234567890", account_holder_address="123 Main St")

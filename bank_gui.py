@@ -93,9 +93,11 @@ class BankApp:
         try:
             self.bank.send_statement_email(email)
             messagebox.showinfo("Success", "Statement sent successfully!")
-            window.destroy()
         except Exception as e:
             messagebox.showerror("Error", f"Failed to send email: {str(e)}")
+        finally:
+            # Do not destroy the statement window here
+            pass
 
     def back_to_main(self, statement_window):
         statement_window.destroy()
@@ -167,5 +169,13 @@ class BankApp:
 
         submit_button = ctk.CTkButton(update_window, text="Submit", command=update_and_send_email)
         submit_button.pack()    
-     
-        
+
+
+def main():
+    root = tk.Tk()
+    app = BankApp(root, "123456")
+    root.mainloop()
+
+
+if __name__ == "__main__":
+    main()
