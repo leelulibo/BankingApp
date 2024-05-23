@@ -2,12 +2,12 @@ import tkinter as tk
 from tkinter import messagebox
 import random
 import string
-import smtplib
 import re
-import os
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from bank_app import bank_main
+from PIL import Image, ImageTk  # Make sure you have this import for handling images
+from utils import register_user, login_user
+import bank_app  # Import the entire bank_app module instead of specific functions to avoid circular imports
 
 class UserRegistrationApp:
     def __init__(self, master):
@@ -15,7 +15,7 @@ class UserRegistrationApp:
         self.master.title("User Registration")
 
         # Bank Logo
-        self.bank_logo = Image.open("2ILeFf-LogoMakr.png")  # Replace "bank_logo.png" with the path to your bank logo image
+        self.bank_logo = Image.open("2ILeFf-LogoMakr.png")  # Replace with the path to your bank logo image
         self.bank_logo = ImageTk.PhotoImage(self.bank_logo)
         self.logo_label = tk.Label(master, image=self.bank_logo)
         self.logo_label.grid(row=0, column=0, columnspan=3, pady=20)
@@ -27,7 +27,6 @@ class UserRegistrationApp:
         self.button_frame = tk.Frame(master)
         self.button_frame.grid(row=2, column=0, columnspan=3, pady=5)
         
-
         self.register_btn = tk.Button(self.button_frame, text="Register", command=self.show_register_form)
         self.register_btn.grid(row=0, column=0, padx=2, pady=2)
 
@@ -81,8 +80,6 @@ class UserRegistrationApp:
 
         self.register_submit_btn = tk.Button(self.register_frame, text="Register", command=self.register_user)
         self.register_submit_btn.grid(row=7, columnspan=2)
-        
-
 
         # Login Form
         self.login_frame = tk.Frame(master)
@@ -100,7 +97,6 @@ class UserRegistrationApp:
 
         self.login_submit_btn = tk.Button(self.login_frame, text="Login", command=self.login_user)
         self.login_submit_btn.grid(row=2, columnspan=2)
-
 
         # Initially hide login form
         self.login_frame.grid_forget()
@@ -121,34 +117,23 @@ class UserRegistrationApp:
         email = self.email_entry.get()
         password = self.password_entry.get()
         
-       # Check if ID number contains only digits and has a length of 13
+        # Validations
         if not id_number.isdigit() or len(id_number) != 13:
-           messagebox.showerror("Error", "Invalid ID number.")
-           return
+            messagebox.showerror("Error", "Invalid ID number.")
+            return
 
-      # Check if ID number already exists
-        with open("user_data.txt", "r") as file:
-            for line in file:
-                data = line.strip().split(",")
-                if data[0] == id_number:
-                    messagebox.showinfo("Existing User", "User already exists. Please log in.")
-                    self.show_login_form()  # Direct user to login form
-                    return
-            
-        # Check if first name contains only letters
         if not firstname.isalpha():
             messagebox.showerror("Error", "First name can only contain letters.")
             return
 
-        # Check if last name contains only letters
         if not lastname.isalpha():
             messagebox.showerror("Error", "Last name can only contain letters.")
             return
-        
+
         if not phone.isdigit() or not phone.startswith('0') or len(phone) != 10:
             messagebox.showerror("Error", "Invalid phone number.")
             return
-        
+
         if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
             messagebox.showerror("Error", "Invalid email address.")
             return
@@ -156,8 +141,6 @@ class UserRegistrationApp:
         if not firstname or not lastname or not phone or not email or not password:
             messagebox.showerror("Error", "Please fill in all fields.")
             return
-        
-       
 
         account_number = self.generate_account_number()
         self.account_entry.config(state="normal")
@@ -165,9 +148,7 @@ class UserRegistrationApp:
         self.account_entry.insert(0, account_number)
         self.account_entry.config(state="readonly")
 
-        with open("user_data.txt", "a") as file:
-            file.write(f"{id_number},{firstname},{lastname},{phone},{email},{account_number},{password}\n")
-
+        register_user(id_number, firstname, lastname, phone, email, account_number, password)
         messagebox.showinfo("Success", "User registered successfully.")
         self.send_registration_email(firstname, lastname, email, account_number, password)
 
@@ -177,8 +158,6 @@ class UserRegistrationApp:
         self.phone_entry.delete(0, tk.END)
         self.email_entry.delete(0, tk.END)
         self.password_entry.delete(0, tk.END)
-
-        
 
     def send_registration_email(self, firstname, lastname, email, account_number, user_password):
         sender_email = "mduduayanda01@gmail.com"  # Your email
@@ -212,21 +191,17 @@ class UserRegistrationApp:
         email = self.login_email_entry.get()
         password = self.login_password_entry.get()
         
-         # Email validation using regular expression
+        # Email validation using regular expression
         if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
             messagebox.showerror("Error", "Invalid email address.")
             return
 
-        with open("user_data.txt", "r") as file:
-            for line in file:
-                data = line.strip().split(",")
-                if data[4] == email and data[6] == password:  # Adjusted index for email and password
-                    messagebox.showinfo("Success", "Login successful!")
-                    # Open bank_app.py page here
-                    self.master.destroy()
-                    bank_main()
-                    return
-        messagebox.showerror("Error", "Invalid email or password.")
+        if login_user(email, password):
+            messagebox.showinfo("Success", "Login successful!")
+            self.master.destroy()
+            bank_app.bank_main()  # Call the bank_main function from bank_app module
+        else:
+            messagebox.showerror("Error", "Invalid email or password.")
 
 def main():
     root = tk.Tk()
