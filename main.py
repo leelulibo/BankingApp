@@ -9,7 +9,7 @@ import os
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 <<<<<<< HEAD
-from PIL import Image, ImageTk
+frpippipom PIL import Image, ImageTk
 =======
 from bank_app import bank_main
 >>>>>>> e27ec71b25e35ffea47d703bf91abf980aac0010
