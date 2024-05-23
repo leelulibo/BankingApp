@@ -6,10 +6,8 @@ from fpdf import FPDF
 from email.mime.base import MIMEBase
 from email import encoders
 import os
-from tkinter import messagebox
+from tkinter import messagebox, Tk
 import PyPDF2
-import customtkinter as ctk
-
 
 class Bank:
     def __init__(self, user_id, currency="R", account_holder_name="", account_number="", account_holder_address=""):
@@ -162,14 +160,6 @@ class Bank:
         pdf.add_page()
         pdf.set_font("Arial", size=12)
 
-        # Add logo to the PDF
-        logo_path = "2ILeFf-LogoMakr.png"  # Specify the path to your logo image
-        if os.path.exists(logo_path):
-            pdf.image(logo_path, x=10, y=10, w=83)  # Adjust x, y, and width as needed
-            pdf.ln(40)  # Add a line break
-        else:
-            print(f"Logo image file not found at: {logo_path}")
-
         # Add account holder details to the PDF
         pdf.cell(200, 10, txt=f"Account Holder Name: {self.account_holder_name}", ln=True, align="L")
         pdf.cell(200, 10, txt=f"Account Number: {self.account_number}", ln=True, align="L")
@@ -201,78 +191,34 @@ class Bank:
         server.starttls()
         server.login(sender_email, password)
         server.sendmail(sender_email, receiver_email, text)
+        # Do not close the SMTP connection here
         server.quit()
 
-        # Remove temporary PDF file
-        os.remove(pdf_file_name)
-        
+   
         # Return True indicating success
         return True
 
-def encrypt_pdf(pdf_file_name):
-    output_pdf_file = "encrypted_bank_statement.pdf"
-    pdf_writer = PyPDF2.PdfWriter()
-    with open(pdf_file_name, "rb") as pdf_file:
-        pdf_reader = PyPDF2.PdfReader(pdf_file)
-        for page_num in range(len(pdf_reader.pages)):
-            pdf_writer.add_page(pdf_reader.pages[page_num])
-        pdf_writer.encrypt("12345")  
-        with open(output_pdf_file, "wb") as encrypted_pdf_file:
-            pdf_writer.write(encrypted_pdf_file)
-    return output_pdf_file
-
-def decrypt_pdf(encrypted_pdf_file):
-    decrypted_pdf_file = "decrypted_bank_statement.pdf"
-    with open(encrypted_pdf_file, "rb") as pdf_file:
-        pdf_reader = PyPDF2.PdfReader(pdf_file)
-        if pdf_reader.is_encrypted:
-            pdf_reader.decrypt("12345")  
+    def encrypt_pdf(self, pdf_file_name):
+        output_pdf_file = "encrypted_bank_statement.pdf"
         pdf_writer = PyPDF2.PdfWriter()
-        for page_num in range(len(pdf_reader.pages)):
-            pdf_writer.add_page(pdf_reader.pages[page_num])
-        with open(decrypted_pdf_file, "wb") as decrypted_pdf:
-            pdf_writer.write(decrypted_pdf)
-    return decrypted_pdf_file  
+        with open(pdf_file_name, "rb") as pdf_file:
+            pdf_reader = PyPDF2.PdfReader(pdf_file)
+            for page_num in range(len(pdf_reader.pages)):
+                pdf_writer.add_page(pdf_reader.pages[page_num])
+            pdf_writer.encrypt("12345")  
+            with open(output_pdf_file, "wb") as encrypted_pdf_file:
+                pdf_writer.write(encrypted_pdf_file)
+        return output_pdf_file
 
-def update_details(self):
-    update_window = ctk.CTkToplevel()
-    update_window.title("Update Personal Details")
-    update_window.geometry("300x300")
-
-    # Labels and entry fields for updating personal details
-
-    phone_label = ctk.CTkLabel(update_window, text="Phone Number:")
-    phone_label.pack()
-
-    phone_entry = ctk.CTkEntry(update_window)
-    phone_entry.pack()
-
-    address_label = ctk.CTkLabel(update_window, text="Address:")
-    address_label.pack()
-
-    address_entry = ctk.CTkEntry(update_window)
-    address_entry.pack()
-
-    # Function to handle updating details and sending email
-    def update_and_send_email():
-        
-        phone = phone_entry.get()
-        address = address_entry.get()
-
-        # Update details in the backend
-        # Assuming you have a method in the Bank class to update user details
-        self.bank.update_user_details( phone, address)
-
-        # Send updated details to user's email
-        try:
-            self.bank.send_update_details_email(  phone, address)
-            messagebox.showinfo("Success", "Details updated and email sent successfully!")
-        except Exception as e:
-            messagebox.showerror("Error", f"Failed to send email: {str(e)}")
-
-        # Close the update window after updating
-        update_window.destroy()
-
-    # Button to submit updated details
-    submit_button = ctk.CTkButton(update_window, text="Submit", command=update_and_send_email)
-    submit_button.pack()
+    def decrypt_pdf(self, encrypted_pdf_file):
+        decrypted_pdf_file = "decrypted_bank_statement.pdf"
+        with open(encrypted_pdf_file, "rb") as pdf_file:
+            pdf_reader = PyPDF2.PdfReader(pdf_file)
+            if pdf_reader.is_encrypted:
+                pdf_reader.decrypt("12345")  
+            pdf_writer = PyPDF2.PdfWriter()
+            for page_num in range(len(pdf_reader.pages)):
+                pdf_writer.add_page(pdf_reader.pages[page_num])
+            with open(decrypted_pdf_file, "wb") as decrypted_pdf:
+                pdf_writer.write(decrypted_pdf)
+        return decrypted_pdf_file  
