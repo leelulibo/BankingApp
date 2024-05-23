@@ -157,14 +157,34 @@ class Bank:
         msg['To'] = receiver_email
         msg['Subject'] = "Bank Statement"
 
+        # Create a PDF instance
         pdf = FPDF()
         pdf.add_page()
         pdf.set_font("Arial", size=12)
+
+        # Add logo to the PDF
+        logo_path = "2ILeFf-LogoMakr.png"  # Specify the path to your logo image
+        if os.path.exists(logo_path):
+            pdf.image(logo_path, x=10, y=10, w=83)  # Adjust x, y, and width as needed
+            pdf.ln(40)  # Add a line break
+        else:
+            print(f"Logo image file not found at: {logo_path}")
+
+        # Add account holder details to the PDF
+        pdf.cell(200, 10, txt=f"Account Holder Name: {self.account_holder_name}", ln=True, align="L")
+        pdf.cell(200, 10, txt=f"Account Number: {self.account_number}", ln=True, align="L")
+        pdf.cell(200, 10, txt=f"Account Holder Address: {self.account_holder_address}", ln=True, align="L")
+        pdf.cell(200, 10, txt="", ln=True)  # Add an empty line for spacing
+
+        # Add transaction log to the PDF
         body = self.display_transaction_log()
         pdf.multi_cell(0, 10, body)
+
+        # Save PDF to a file
         pdf_file_name = "bank_statement.pdf"
         pdf.output(pdf_file_name)
 
+        # Attach PDF to the email
         with open(pdf_file_name, "rb") as attachment:
             part = MIMEBase("application", "octet-stream")
             part.set_payload(attachment.read())
@@ -176,12 +196,19 @@ class Bank:
 
         text = msg.as_string()
 
+        # Send email
         server = smtplib.SMTP('smtp.gmail.com', 587)
         server.starttls()
         server.login(sender_email, password)
         server.sendmail(sender_email, receiver_email, text)
         server.quit()
+
+        # Remove temporary PDF file
+        os.remove(pdf_file_name)
         
+        # Return True indicating success
+        return True
+
 def encrypt_pdf(pdf_file_name):
     output_pdf_file = "encrypted_bank_statement.pdf"
     pdf_writer = PyPDF2.PdfWriter()
@@ -193,7 +220,6 @@ def encrypt_pdf(pdf_file_name):
         with open(output_pdf_file, "wb") as encrypted_pdf_file:
             pdf_writer.write(encrypted_pdf_file)
     return output_pdf_file
-
 
 def decrypt_pdf(encrypted_pdf_file):
     decrypted_pdf_file = "decrypted_bank_statement.pdf"
@@ -213,7 +239,7 @@ def update_details(self):
     update_window.title("Update Personal Details")
     update_window.geometry("300x300")
 
-    # Labels and entry fields for updating personal detailspip
+    # Labels and entry fields for updating personal details
 
     phone_label = ctk.CTkLabel(update_window, text="Phone Number:")
     phone_label.pack()
@@ -250,5 +276,3 @@ def update_details(self):
     # Button to submit updated details
     submit_button = ctk.CTkButton(update_window, text="Submit", command=update_and_send_email)
     submit_button.pack()
-  
-   
