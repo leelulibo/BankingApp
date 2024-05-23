@@ -25,6 +25,9 @@ class BankApp:
         self.update_details_button = ctk.CTkButton(master, text="Update Details", command=self.update_details)
         self.update_details_button.pack()
         
+        self.logout_button = ctk.CTkButton(master, text="Logout", command=self.logout)
+        self.logout_button.pack()
+        
 
         self.balance_label = ctk.CTkLabel(master, text=self.bank.display_balance())
         self.balance_label.pack()
@@ -168,4 +171,9 @@ class BankApp:
         submit_button = ctk.CTkButton(update_window, text="Submit", command=update_and_send_email)
         submit_button.pack()    
      
+    def logout(self):
+        if self.on_logout:
+            self.on_logout()
+
+    
         

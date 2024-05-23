@@ -7,6 +7,7 @@ from email.mime.multipart import MIMEMultipart
 import os
 import tkinter as tk
 from bank_backend import Bank
+from face_recognition_models import  pose_predictor_five_point_model_location, pose_predictor_model_location, face_recognition_model_location,cnn_face_detector_model_location
 
 def generate_account_number():
     return ''.join(random.choices(string.digits, k=8))

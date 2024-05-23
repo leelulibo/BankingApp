@@ -10,6 +10,10 @@ import re
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import smtplib
+import face_recognition
+import cv2
+import numpy as np
+import os
 
 
 
@@ -23,11 +27,14 @@ class UserRegistrationApp:
         
 
         # Bank Logo
-        self.bank_logo = Image.open("2ILeFf-LogoMakr.png")  # Replace with your path
-        self.bank_logo = ImageTk.PhotoImage(self.bank_logo)
-        self.logo_label = ctk.CTkLabel(master, image=self.bank_logo)
-        self.logo_label.grid(row=0, column=0, columnspan=3, pady=20)
-
+        try:
+            bank_logo_img = Image.open("2ILeFf-LogoMakr.png")  # Replace with your path
+            self.bank_logo = ImageTk.PhotoImage(bank_logo_img)
+            self.logo_label = ctk.CTkLabel(master, image=self.bank_logo)
+            self.logo_label.grid(row=0, column=0, columnspan=3, pady=20)
+        except Exception as e:
+            print("Error loading image:", e)
+    
         # Choose an option label
         self.choice_label = ctk.CTkLabel(master, text="Choose an option:")
         self.choice_label.grid(row=1, column=0, columnspan=3, pady=5)
@@ -107,12 +114,38 @@ class UserRegistrationApp:
         self.login_password_label.grid(row=1, column=0, sticky="e")
         self.login_password_entry = ctk.CTkEntry(self.login_frame, show="*")
         self.login_password_entry.grid(row=1, column=1)
-
+       
         self.login_submit_btn = ctk.CTkButton(self.login_frame, text="Login", command=self.login_user)
         self.login_submit_btn.grid(row=2, columnspan=2)
+        '''
+        self.face_recognition_frame = ctk.CTkFrame(master)
+        self.face_recognition_frame.grid(row=3, column=0, columnspan=3)
+        self.face_recognition_frame.grid_forget()
 
+        self.face_id_number_label = ctk.CTkLabel(self.face_recognition_frame, text="ID Number:")
+        self.face_id_number_label.grid(row=0, column=0, sticky="e")
+        self.face_id_number_entry = ctk.CTkEntry(self.face_recognition_frame)
+        self.face_id_number_entry.grid(row=0, column=1)
+
+        self.capture_face_btn = ctk.CTkButton(self.face_recognition_frame, text="Capture Face", command=self.capture_face)
+        self.capture_face_btn.grid(row=1, columnspan=2)
+        '''
+        
+        
+        
         # Initially hide login form
         self.login_frame.grid_forget()
+        '''
+    def enable_face_recognition(self):
+        self.face_recognition_frame.grid()
+        self.register_frame.grid_forget()
+        self.login_frame.grid_forget()
+    # Add your face recognition setup code here
+    # For example, you can start the camera and capture faces
+        messagebox.showinfo("Face Recognition", "Face recognition enabled. Please look at the camera.")
+        self.capture_face() 
+        '''
+    
         
     def generate_account_number(self):
       return ''.join(random.choices(string.digits, k=8))  
@@ -200,10 +233,17 @@ class UserRegistrationApp:
     def show_register_form(self):
         self.register_frame.grid()
         self.login_frame.grid_forget()
+        self.face_recognition_btn.grid_forget()
+        self.face_recognition_login_btn.grid_forget()
 
     def show_login_form(self):
         self.login_frame.grid()
         self.register_frame.grid_forget()
+        '''
+        self.face_recognition_btn = ctk.CTkButton(self.button_frame, text="Enable Face Recognition", command=self.enable_face_recognition)
+        self.face_recognition_btn.grid(row=0, column=2, padx=2, pady=2)
+        '''
+        
 
     def login_user(self):
         email = self.login_email_entry.get()
@@ -216,5 +256,119 @@ class UserRegistrationApp:
                 self.on_login_success(user_id)
         else:
             messagebox.showerror("Error", error_message)
+        '''    
+    def capture_face(self):
+        id_number = self.face_id_number_entry.get()
+        if not id_number:
+            messagebox.showerror("Error", "Please enter ID number before capturing face.")
+            return
+
+        # Check if ID exists in user_data.txt
+        user_exists = False
+        with open("user_data.txt", "r") as file:
+            for line in file:
+                data = line.strip().split(",")
+                if data[0] == id_number:
+                    user_exists = True
+                    break
+
+        if not user_exists:
+            messagebox.showerror("Error", "ID not found. Please register first.")
+            return
+
+            cap = cv2.VideoCapture(0)
+            ret, frame = cap.read()
+            cap.release()
+
+            if ret:
+          # Convert the image from BGR (OpenCV format) to RGB (face_recognition format)
+            rgb_frame = frame[:, :, ::-1]
+
+          # Display the frame
+            cv2.imshow('Camera Feed', frame)
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
+
+            # Detect faces in the frame
+            face_locations = face_recognition.face_locations(rgb_frame)
+            if face_locations:
+                # Get the face encodings
+                face_encodings = face_recognition.face_encodings(rgb_frame, face_locations)
+                if face_encodings:
+                    # Save the face encoding
+                    face_encoding = face_encodings[0]
+                    face_data_file = f"{id_number}_face.npy"
+                    with open(face_data_file, 'wb') as f:
+                        np.save(f, face_encoding)
+                    messagebox.showinfo("Success", "Face captured and saved successfully.")
+                else:
+                    messagebox.showerror("Error", "No face detected. Please try again.")
+            else:
+                messagebox.showerror("Error", "No face detected. Please try again.")
+        else:
+            messagebox.showerror("Error", "Failed to capture image. Please try again.")
             
+
+    def capture_face(self):
+        id_number = self.face_id_number_entry.get()
+        if not id_number:
+            messagebox.showerror("Error", "Please enter ID number before capturing face.")
+            return
+
+        # Check if ID exists in user_data.txt
+        user_exists = False
+        with open("user_data.txt", "r") as file:
+            for line in file:
+                data = line.strip().split(",")
+                if data[0] == id_number:
+                    user_exists = True
+                    break
+
+        if not user_exists:
+            messagebox.showerror("Error", "ID not found. Please register first.")
+            return
+
+        cap = cv2.VideoCapture(0)
+        ret, frame = cap.read()
+        cap.release()
+
+        if ret:
+            # Convert the image from BGR (OpenCV format) to RGB (face_recognition format)
+            rgb_frame = frame[:, :, ::-1]
+
+            # Display the frame
+            cv2.imshow('Camera Feed', frame)
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
             
+            # Detect face locations
+            face_locations = face_recognition.face_locations(rgb_frame)
+
+            # Ensure at least one face is detected
+            if face_locations:
+                # Get face encodings for the detected faces
+                face_encodings = face_recognition.face_encodings(rgb_frame, face_locations)
+                if face_encodings:
+                    face_encoding = face_encodings[0]  # Assuming only one face for simplicity
+                    for file in os.listdir():
+                        if file.endswith("_face.npy"):
+                            saved_face_encoding = np.load(file)
+                            matches = face_recognition.compare_faces([saved_face_encoding], face_encoding)
+                            if True in matches:
+                                matched_id_number = file.split('_')[0]
+                                with open("user_data.txt", "r") as f:
+                                    for line in f:
+                                        data = line.strip().split(",")
+                                        if data[0] == matched_id_number:
+                                            messagebox.showinfo("Success", f"Login successful for {data[1]} {data[2]}!")
+                                            if self.on_login_success:
+                                                self.on_login_success(matched_id_number)
+                                            return
+                    messagebox.showerror("Error", "No matching face found.")
+                else:
+                    messagebox.showerror("Error", "No face encodings found. Please try again.")
+            else:
+                messagebox.showerror("Error", "No face detected. Please try again.")
+        else:
+            messagebox.showerror("Error", "Failed to capture image. Please try again.")
+'''

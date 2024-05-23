@@ -1,4 +1,4 @@
-from tkinter import simpledialog, messagebox, scrolledtext
+'''from tkinter import simpledialog, messagebox, scrolledtext
 from datetime import datetime, timedelta
 import tkinter as tk
 import smtplib
@@ -551,3 +551,4 @@ def bank_main():
 
 if __name__ == "__main__":
     bank_main()
+'''
