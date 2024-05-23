@@ -8,6 +8,7 @@ from email import encoders
 import os
 from tkinter import messagebox
 import PyPDF2
+import customtkinter as ctk
 
 
 class Bank:
@@ -18,6 +19,8 @@ class Bank:
         self.account_number = account_number
         self.account_holder_address = account_holder_address
         self.address_last_updated = None  # Store the date when the address was last updated
+        self.bank_data_file = f"{user_id}_BankData.txt"
+        self.transaction_log_file = f"{user_id}_TransactionLog.txt"
         self.load_bank_data()
         self.load_transaction_log()
         
@@ -51,26 +54,26 @@ class Bank:
 
     def load_bank_data(self):
         try:
-            with open('BankData.txt', 'r') as file:
+            with open(self.bank_data_file, 'r') as file:
                 self.balance = float(file.readline())
         except FileNotFoundError:
             self.balance = 0
 
     def save_bank_data(self):
-        with open(self.get_user_file_path('BankData.txt'), 'w') as file:
+        with open(self.bank_data_file, 'w') as file:
             file.write(str(self.balance))
             
             
 
     def load_transaction_log(self):
         try:
-            with open(self.get_user_file_path('TransactionLog.txt'), 'r') as file:
+            with open(self.transaction_log_file, 'r') as file:
                 self.transaction_log = file.readlines()
         except FileNotFoundError:
             self.transaction_log = []
 
     def save_transaction_log(self, transaction):
-        with open(self.get_user_file_path('TransactionLog.txt'), 'a') as file:
+        with open(self.transaction_log_file, 'a') as file:
             file.write(transaction)
             
     def get_transactions(self):
@@ -203,5 +206,49 @@ def decrypt_pdf(encrypted_pdf_file):
             pdf_writer.add_page(pdf_reader.pages[page_num])
         with open(decrypted_pdf_file, "wb") as decrypted_pdf:
             pdf_writer.write(decrypted_pdf)
-    return decrypted_pdf_file    
+    return decrypted_pdf_file  
+
+def update_details(self):
+    update_window = ctk.CTkToplevel()
+    update_window.title("Update Personal Details")
+    update_window.geometry("300x300")
+
+    # Labels and entry fields for updating personal detailspip
+
+    phone_label = ctk.CTkLabel(update_window, text="Phone Number:")
+    phone_label.pack()
+
+    phone_entry = ctk.CTkEntry(update_window)
+    phone_entry.pack()
+
+    address_label = ctk.CTkLabel(update_window, text="Address:")
+    address_label.pack()
+
+    address_entry = ctk.CTkEntry(update_window)
+    address_entry.pack()
+
+    # Function to handle updating details and sending email
+    def update_and_send_email():
+        
+        phone = phone_entry.get()
+        address = address_entry.get()
+
+        # Update details in the backend
+        # Assuming you have a method in the Bank class to update user details
+        self.bank.update_user_details( phone, address)
+
+        # Send updated details to user's email
+        try:
+            self.bank.send_update_details_email(  phone, address)
+            messagebox.showinfo("Success", "Details updated and email sent successfully!")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to send email: {str(e)}")
+
+        # Close the update window after updating
+        update_window.destroy()
+
+    # Button to submit updated details
+    submit_button = ctk.CTkButton(update_window, text="Submit", command=update_and_send_email)
+    submit_button.pack()
+  
    

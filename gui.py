@@ -12,6 +12,7 @@ from email.mime.multipart import MIMEMultipart
 import smtplib
 
 
+
 class UserRegistrationApp:
     def __init__(self, master):
         self.master = master
@@ -159,13 +160,13 @@ class UserRegistrationApp:
             messagebox.showerror("Error", "Invalid email address.")
             return
 
-        if not firstname or not lastname or not phone or not email or not password or not address:
+        if not id_number or not firstname or not lastname or not phone or not email or not password or not address:
             messagebox.showerror("Error", "Please fill in all fields.")
             return
         
         account_number = self.generate_account_number()
         self.account_entry.configure(state="normal")
-        self.account_entry.delete(0, tk.END)
+        self.account_entry.delete(0, ctk.END)
         self.account_entry.insert(0, account_number)
         self.account_entry.configure(state="readonly")
 
@@ -175,25 +176,25 @@ class UserRegistrationApp:
         messagebox.showinfo("Success", "User registered successfully.")
         self.send_registration_email(firstname, lastname, email, account_number, password, address)
         
-    def send_registration_email(firstname, lastname, email, account_number, user_password, address):
-        sender_email = "mduduayanda01@gmail.com"
+    def send_registration_email(self, firstname, lastname, email, account_number, user_password, address):
+        sender_email = "mduduayanda01@gmail.com"  # Your email
         receiver_email = email
-        password = "wghb wmhi fwgn qkmu"
-
+        password = "wghb wmhi fwgn qkmu"  # Your email password
+ 
         message = MIMEMultipart("alternative")
         message["Subject"] = "Welcome to Virtual Vault!"
         message["From"] = sender_email
         message["To"] = receiver_email
-
+ 
         text = f"Dear {firstname} {lastname},\n\nThank you for registering with Virtual Vault. Your account has been successfully created with the following details:\n\nFirst Name: {firstname}\nLast Name: {lastname}\nEmail: {email}\nAccount Number: {account_number}\nPassword: {user_password}\nAddress: {address}\n\nPlease let us know if you have any questions.\n\nBest regards,\nVirtual Vault"
-
+ 
         part = MIMEText(text, "plain")
         message.attach(part)
-
+ 
         with smtplib.SMTP("smtp.gmail.com", 587) as server:
-         server.starttls()
-         server.login(sender_email, password)
-        server.sendmail(sender_email, receiver_email, message.as_string())
+            server.starttls()
+            server.login(sender_email, password)
+            server.sendmail(sender_email, receiver_email, message.as_string())
     
 
     def show_register_form(self):

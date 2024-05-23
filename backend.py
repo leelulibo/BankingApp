@@ -6,6 +6,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import os
 import tkinter as tk
+from bank_backend import Bank
 
 def generate_account_number():
     return ''.join(random.choices(string.digits, k=8))
@@ -61,17 +62,25 @@ def login_user(email, password):
     if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
         return False, None, "Invalid email address."
 
-    with open("user_data.txt", "r") as file:
-        for line in file:
-            data = line.strip().split(",")
-            if data[4] == email and data[6] == password:
-                user_id = data[4]  # Use email as the user identifier
-                if not os.path.exists(f"{user_id}_TransactionLog.txt"):
-                    open(f"{user_id}_TransactionLog.txt", "w").close()
-                if not os.path.exists(f"{user_id}_BankData.txt"):
-                    open(f"{user_id}_BankData.txt", "w").close()
-                return True, user_id, None
+    try:
+        with open("user_data.txt", "r") as file:
+            for line in file:
+                data = line.strip().split(",")
+                if len(data) < 7:
+                    print(f"Malformed line in user_data.txt: {line.strip()}")
+                    continue
+                if data[4] == email and data[6] == password:
+                    user_id = data[4]  # Use email as the user identifier
+                    # Ensure bank data and transaction log files exist
+                    bank = Bank(user_id)
+                    bank.save_bank_data()
+                    bank.save_transaction_log("")
+                    return True, user_id, None
+
+    except FileNotFoundError:
+        return False, None, "User data file not found."
+    except Exception as e:
+        return False, None, str(e)
 
     return False, None, "Invalid email or password."
-
 
