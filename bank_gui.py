@@ -145,6 +145,12 @@ class BankApp:
 
         address_entry = ctk.CTkEntry(update_window)
         address_entry.pack()
+        
+        # Load user details from the backend and pre-fill the entry fields
+        firstname_entry.insert(0, self.bank.account_holder_name)
+        lastname_entry.insert(0, self.bank.lastname)
+        phone_entry.insert(0, self.bank.phone)
+        address_entry.insert(0, self.bank.address)
 
         def update_and_send_email():
             firstname = firstname_entry.get()

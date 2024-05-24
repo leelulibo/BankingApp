@@ -9,6 +9,7 @@ import os
 from tkinter import messagebox
 import PyPDF2
 import customtkinter as ctk
+import json
 
 
 class Bank:
@@ -23,6 +24,20 @@ class Bank:
         self.transaction_log_file = f"{user_id}_TransactionLog.txt"
         self.load_bank_data()
         self.load_transaction_log()
+        self.load_user_details()
+        
+    def load_user_details(self):
+        # Load user details from JSON file
+        with open("user_data.json", "r") as json_file:
+            users = json.load(json_file)
+            for user in users:
+                if user["user_id"] == self.user_id:
+                    self.account_holder_name = user["firstname"]
+                    self.lastname = user["lastname"]
+                    self.phone = user["phone"]
+                    self.address = user["address"]
+                    break
+   
         
     def set_account_info(self, name, number, address):
         self.account_holder_name = name
